@@ -1,0 +1,99 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  default:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+  
+  detailed:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(funcName)s:%(lineno)d - %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+  
+  json:
+    "()": pythonjsonlogger.jsonlogger.JsonFormatter
+    format: "%(asctime)s %(name)s %(levelname)s %(module)s %(funcName)s %(lineno)d %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: default
+    stream: ext://sys.stdout
+  
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: logs/ai_portfolio.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 5
+  
+  error_file:
+    class: logging.handlers.RotatingFileHandler
+    level: ERROR
+    formatter: detailed
+    filename: logs/errors.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 5
+  
+  agent_file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: json
+    filename: logs/agents.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 10
+
+loggers:
+  # CrewAI specific loggers
+  crewai:
+    level: INFO
+    handlers: [console, file, agent_file]
+    propagate: false
+  
+  # Agent-specific logging
+  agentic:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+  
+  agentic.agents:
+    level: DEBUG
+    handlers: [console, agent_file]
+    propagate: false
+  
+  agentic.crews:
+    level: INFO
+    handlers: [console, file, agent_file]
+    propagate: false
+  
+  agentic.tasks:
+    level: DEBUG
+    handlers: [console, agent_file]
+    propagate: false
+  
+  # External libraries
+  httpx:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+  
+  urllib3:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+  
+  openai:
+    level: INFO
+    handlers: [console, file]
+    propagate: false
+  
+  anthropic:
+    level: INFO
+    handlers: [console, file]
+    propagate: false
+
+root:
+  level: INFO
+  handlers: [console, file, error_file]
