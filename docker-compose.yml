@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # Main development environment
+  ai-portfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-portfolio-dev
+    volumes:
+      - .:/workspace
+      - /workspace/.venv  # Exclude venv from bind mount
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"  # For any web interfaces
+      - "8888:8888"  # Jupyter Lab
+    command: tail -f /dev/null  # Keep container running
+    networks:
+      - ai-network
+
+  # ChromaDB vector database
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: ai-portfolio-chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chromadb_data:/chroma/chroma
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    networks:
+      - ai-network
+
+  # Redis for caching and task queues
+  redis:
+    image: redis:7-alpine
+    container_name: ai-portfolio-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - ai-network
+
+  # Jupyter Lab for experimentation
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-portfolio-jupyter
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace
+    env_file:
+      - .env
+    ports:
+      - "8889:8888"
+    command: >
+      bash -c "pip install jupyterlab &&
+               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+    networks:
+      - ai-network
+    depends_on:
+      - chromadb
+      - redis
+
+  # PostgreSQL for structured data (optional)
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai-portfolio-postgres
+    environment:
+      - POSTGRES_DB=ai_portfolio
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai-network
+
+volumes:
+  chromadb_data:
+  redis_data:
+  postgres_data:
+
+networks:
+  ai-network:
+    driver: bridge

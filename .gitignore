@@ -50,6 +50,29 @@ yarn-error.log*
 *.pem
 secrets/
 config/secrets.json
+.env.*
+!.env.example
+api_keys/
+credentials/
+token.txt
+*.token
+
+# CrewAI specific
+crew_output/
+agent_logs/
+task_outputs/
+crew_results/
+
+# AI/ML specific
+wandb/
+mlruns/
+.neptune/
+tensorboard_logs/
+artifacts/
+checkpoints/
+saved_models/
+models/
+weights/
 
 # IDE and editors
 .vscode/
