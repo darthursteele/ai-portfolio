@@ -1,6 +1,6 @@
 # AI Portfolio
 
-A collection of AI applications, agentic systems, and prompt engineering work by [@darthursteele](https://github.com/darthursteele).
+A collection of AI applications, agentic systems, and context engineering work by [@darthursteele](https://github.com/darthursteele).
 
 ## Repository Structure
 
