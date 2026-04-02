@@ -118,3 +118,9 @@ datasets/
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
+
+# Skill eval workspaces (build artifacts, not portfolio content)
+skills/*-workspace/
+
+# macOS
+.DS_Store

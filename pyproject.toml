@@ -9,7 +9,7 @@ description = "Portfolio showcasing AI applications, agentic systems, and prompt
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "darthursteele", email = "david.arthur.steele@gmail.com"}
+    {name = "darthursteele", email = "darthursteele@users.noreply.github.com"}
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

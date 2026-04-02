@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Company Analysis Schema v1",
+  "description": "Machine-readable structure for cross-agent handoff of company analysis results used in cover-letter and interview preparation workflows.",
+  "type": "object",
+  "required": ["schema_version", "company", "role_context", "metadata"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "company": {
+      "type": "object",
+      "required": ["name", "slug"],
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" }
+      }
+    },
+    "role_context": {
+      "type": "object",
+      "properties": {
+        "role": { "type": "string" },
+        "department": { "type": "string" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["generated_at", "generator", "content_hash"],
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time" },
+        "generator": { "type": "string" },
+        "content_hash": { "type": "string" },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string", "format": "uri" },
+              "retrieved_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    },
+    "mission_and_problem": {
+      "type": "object",
+      "properties": {
+        "mission": {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+            "source_url": { "type": "string", "format": "uri" }
+          }
+        },
+        "core_problems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "problem": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "source_url": { "type": "string", "format": "uri" }
+            }
+          }
+        }
+      }
+    },
+    "market_position": {
+      "type": "object",
+      "properties": {
+        "position": { "type": "string" },
+        "competitors": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "product_strategy": {
+      "type": "object",
+      "properties": {
+        "confirmed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "statement": { "type": "string" },
+              "as_of": { "type": "string" },
+              "source_url": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "inferred": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "signal": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "sources": { "type": "array", "items": { "type": "string", "format": "uri" } }
+            }
+          }
+        }
+      }
+    },
+    "interview_intel": {
+      "type": "object",
+      "properties": {
+        "likely_challenges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "challenge": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "source_url": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "talking_points": { "type": "array", "items": { "type": "string" } },
+        "recent_milestones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "date": { "type": "string" },
+              "source_url": { "type": "string", "format": "uri" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
