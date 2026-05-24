@@ -1,0 +1,23 @@
+{
+  "skill_name": "job-application-pipeline",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run the job search pipeline on this role: https://edia.app/careers?ashby_jid=8a161495-4e3c-4045-ba36-6efed495e386. My resume is in the project files.",
+      "expected_output": "Skill reads the JD URL. The page is JS-gated and won't render. Skill stops and explicitly tells the user the page failed to render, asks them to paste the JD text. Does NOT proceed to Stage 2 with partial information.",
+      "what_this_tests": "Gate behavior when JD URL fails — does the skill enforce its own 'no partial content' rule?"
+    },
+    {
+      "id": 2,
+      "prompt": "Help me apply for a PM role. Here's the JD: [pasted JD text — Edia product manager, emphasizes 0-to-1 development, vibe coding, prototype-building, K-12 ed-tech]. My resume is attached.",
+      "expected_output": "Stage 1 JD summary presented cleanly. Stage 2 company + hiring team research conducted. After Stage 2, skill STOPS and asks the user to confirm the research before proceeding. Does NOT automatically continue to Stage 3.",
+      "what_this_tests": "Gate 2 — does the skill pause after company research and wait for explicit user confirmation?"
+    },
+    {
+      "id": 3,
+      "prompt": "Continue from Stage 3. Here's the gap analysis output: [gap analysis showing missing K-12 experience and no named AI coding tools]. Start the experience gap questions.",
+      "expected_output": "Skill asks exactly ONE gap question. Waits. Does not present a bulleted list of all gap questions at once. First question targets the highest-priority gap from the analysis.",
+      "what_this_tests": "Gate 4 — does the skill enforce one-question-at-a-time conversational Q&A?"
+    }
+  ]
+}

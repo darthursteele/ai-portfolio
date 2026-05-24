@@ -1,5 +1,5 @@
 ---
-name: job-search-pipeline
+name: job-application-pipeline
 description: >
   Ten-stage collaborative job application pipeline. Researches the JD, company, and hiring team; runs interactive gap analysis and strategy discussion; then builds resume and cover letter through back-and-forth with the user. Use any time the user mentions applying to a job, writing a cover letter, optimizing their resume for a specific role, or doing pre-interview company research. Trigger on phrases like "I want to apply to [company]", "help me with my application for [role]", "I have a job posting I want to apply to", "can you write me a cover letter", "help me prep for applying to [company]", or "I need to optimize my resume for this role".
 ---
@@ -92,8 +92,13 @@ Read `references/stage2-company-research.md` for the full prompt and research st
 1. `{company-slug}_company-brief.md` — narrative report with seven sections: Inside Scoop, Mission, Market Position, Product Strategy, Equity, Interview Intel, Hiring Team Profiles
 2. `{company-slug}_company-analysis.json` — structured JSON per `references/company-analysis.schema.json`
 
-**⛔ STOP — Gate 2:** Present the narrative brief. Ask:
-*"Does this look right? Any corrections or insider knowledge I should factor in before we move on?"*
+**⛔ STOP — Gate 2:** After presenting the narrative brief, add a visible separator before the gate question so it doesn't get lost at the end of a long output. Use this exact format:
+
+```
+---
+⛔ Pausing here before Stage 3. Does this look right? Any corrections or insider knowledge I should factor in before moving to the resume gap analysis?
+```
+
 Wait for the user's response. Incorporate any corrections, then proceed to Stage 3.
 
 ---
@@ -119,7 +124,7 @@ Read `references/stage3-gap-analysis.md` for the full prompt.
 - Start with the highest-priority gap from Stage 3.
 - For each question, explain briefly why you're asking (what it unlocks for the application).
 - After each answer, either ask a follow-up or move to the next gap.
-- End only when the highest-impact gaps are closed — not when every possible question has been asked. Use judgment.
+- Aim for 5–6 questions total. Prioritize questions that affect the competitiveness assessment (Stage 5) or could surface new resume bullets — those are the highest-value. Stop when those are covered, even if minor gaps remain. Don't ask about gaps that are either unaddressable (true missing experience) or already adequately covered by the resume.
 - After each answer, write it immediately to `stage4_gap_answers` in `{company-slug}_session-state.json` — including the question asked, the user's answer, the gap it addresses, and any implication for resume bullets. Do not batch writes to the end of the stage; answers should persist even if the conversation is interrupted.
 
 **Example opening:** *"Before I move to strategy, I want to fill in a few gaps. First: [most important gap from Stage 3]. [One question.]"*
