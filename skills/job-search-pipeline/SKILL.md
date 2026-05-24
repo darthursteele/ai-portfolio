@@ -1,135 +1,250 @@
 ---
 name: job-search-pipeline
 description: >
-  Three-stage job application pipeline: researches the target company, optimizes the resume, and writes the cover letter — with structured JSON handoffs between stages. Use this skill any time the user mentions applying to a job, writing a cover letter, optimizing their resume for a specific role, or doing pre-interview company research. Trigger on phrases like "I want to apply to [company]", "help me with my application for [role]", "I have a job posting I want to apply to", "can you write me a cover letter for [company]", "help me prep for applying to [company]", or "I need to optimize my resume for this role". Even if the user only asks for one stage (e.g. "just write the cover letter"), invoke this skill — it will ask which stages they want to run.
+  Ten-stage collaborative job application pipeline. Researches the JD, company, and hiring team; runs interactive gap analysis and strategy discussion; then builds resume and cover letter through back-and-forth with the user. Use any time the user mentions applying to a job, writing a cover letter, optimizing their resume for a specific role, or doing pre-interview company research. Trigger on phrases like "I want to apply to [company]", "help me with my application for [role]", "I have a job posting I want to apply to", "can you write me a cover letter", "help me prep for applying to [company]", or "I need to optimize my resume for this role".
 ---
 
 ## What This Skill Does
 
-This is a three-stage sequential pipeline for job applications, designed around a core principle: good applications require good intelligence, and good intelligence should flow between stages rather than getting re-entered manually.
+A sequential, collaborative pipeline for job applications. Every stage either produces intelligence that feeds the next, or requires explicit user input before proceeding. **No stage is skipped. No gate is bypassed.** The quality of the final application package depends on the conversation that builds it.
 
-**Stage 1 — Company Research**: Conducts deep due diligence on the target company using web search. Outputs both a human-readable brief and a structured JSON file with confidence labels on every factual claim. The JSON becomes the structured input for Stage 2.
+---
 
-**Stage 2 — Cover Letter**: Reads the resume, job description, and Stage 1 JSON. Performs a competitiveness assessment and positioning analysis *before* writing anything. Gets your approval on the positioning strategy, then drafts the letter grounded in specific company intelligence.
+## MANDATORY GATE RULE
 
-**Stage 3 — Resume Optimization**: Frames your experience as a solution to the hiring manager's business problem. Produces an alignment analysis, ATS keyword priorities, gap assessment, and a fully optimized resume with 80%+ quantified bullets.
+> **This pipeline runs one stage at a time. After every stage that has a ⛔ STOP marker, Claude must pause, present outputs, and wait for explicit user confirmation before continuing. Do not proceed to the next stage without it. Not for speed. Not for convenience. Not even if the user's original message seems to authorize the full pipeline.**
 
-The JSON schema (`references/company-analysis.schema.json`) is the backbone that links Stage 1 to Stage 2 — confidence labels travel with each claim, so the cover letter only uses information the research actually verified.
+---
+
+## Pipeline Overview
+
+| # | Stage | Gate? |
+|---|---|---|
+| 1 | JD Review | — |
+| 2 | Company & Hiring Team Research | ⛔ User confirms research before proceeding |
+| 3 | Resume Gap Analysis | — |
+| 4 | Experience Gap Questions | ⛔ Conversational Q&A — one question at a time |
+| 5 | Application Strategy Discussion | ⛔ User approves positioning before proceeding |
+| 6 | Headline Brainstorm | ⛔ User picks/refines headline |
+| 7 | Professional Summary | ⛔ User approves summary |
+| 8 | Full Resume Customization | ⛔ User approves all changes |
+| 9 | Additional Application Materials | ⛔ Ask before writing cover letter |
+| 10 | Cover Letter | ⛔ Iterate until user approves |
 
 ---
 
 ## Upfront Inputs
 
-Before starting, ask the user for:
+Before starting Stage 1, confirm you have:
 
-1. **Target company** and **role title** (required for all stages)
-2. **Department/team** (optional but improves Stage 1 research depth — e.g., "Data & Analytics", "Product")
-3. **Which stages to run**: all three, or specific ones. Default to all three if not specified.
-4. **Resume file**: needed for Stages 2 and 3. Ask them to attach it or give the path.
-5. **Job description file**: needed for Stages 2 and 3. Ask them to attach it or paste it.
-6. **Personalization notes** (optional): tone preferences, specific themes to emphasize, things to avoid.
+1. **Job description** — URL or pasted text. If a URL is given, fetch it. If the page is JavaScript-gated and doesn't render, say so explicitly and ask the user to paste the text directly. Do not proceed with partial JD content.
+2. **Resume** — attached file or project file path.
 
-Keep this conversational — one message to collect, not six separate questions. Something like: *"I'll run the full three-stage pipeline. To get started: what's the company name, the role you're applying for, and the department or team if you know it? And go ahead and attach your resume and the job description — I'll use those for the cover letter and resume stages."*
-
-If they only need specific stages, skip the inputs you don't need. But check: if they ask for just a cover letter without a company research file, offer to run Stage 1 first — the letter will be significantly better with it.
+Keep this to one message: *"To get started I need the job description (URL or paste it in) and your resume if you haven't already attached it."*
 
 ---
 
 ## Naming Convention
 
-At the start of every run, establish a base name for output files:
+At the start of every run, create:
 ```
 {company-slug}_{role-slug}/
   {company-slug}_company-brief.md
   {company-slug}_company-analysis.json
-  {company-slug}_cover-letter.md
+  {company-slug}_session-state.json        ← accumulates approved decisions across stages
   {company-slug}_resume-optimized.md
+  {company-slug}_cover-letter.md
+  {company-slug}_additional-materials.md   ← if needed
 ```
 
-Example: `rentable_principal-pm/rentable_company-brief.md`
+Tell the user the folder name upfront.
 
-Save all outputs to a single folder in the workspace. Tell the user the folder name at the start so they know where to find things.
+**Session state file:** Initialize `{company-slug}_session-state.json` at the start of Stage 4, conforming to `references/session-state.schema.json`. Write to it after each gate — do not wait until the end of the pipeline. Downstream stages (6, 7, 8, 10) read from this file rather than scraping conversation history. This matters in long conversations where earlier answers may no longer be in the active context window.
 
 ---
 
-## Stage 1: Company Intelligence Research
+## Stage 1: JD Review
 
-Read `references/stage1-company-research.md` for the full prompt and research standards.
+Read `references/stage1-jd-review.md` for the full prompt.
 
 **Core behavior:**
-- Run web searches to gather information from official sources, analyst reports, Glassdoor/Blind, SEC filings, tech media.
-- Apply confidence labels (`high / medium / low / speculation`) to every factual claim.
-- Tag every quantitative claim with a recency marker ("as of Q3 2024").
-- If a piece of information simply isn't publicly available, say so — don't fill the gap with guesswork.
+- Fetch the JD URL. If the page fails to render or returns only partial content, stop immediately and tell the user: *"The page didn't render the full JD — can you paste it in directly?"* Do not proceed with incomplete content.
+- Parse the JD into structured sections: role overview, key responsibilities, required qualifications, nice-to-haves, and any signals about team/culture/stage.
+- Identify anything ambiguous or missing that would affect how you approach the application.
+
+**Output:** Present a clean JD summary to the user — not a copy-paste, a structured interpretation. Flag any gaps (e.g., compensation not listed, seniority level unclear). No gate — proceed to Stage 2 immediately after presenting, since the user doesn't need to approve a JD summary.
+
+---
+
+## Stage 2: Company & Hiring Team Research
+
+Read `references/stage2-company-research.md` for the full prompt and research standards.
+
+**Core behavior:**
+- Research the company per the existing standards (mission, market position, product strategy, equity, culture, interview intel).
+- **Additionally:** Attempt to identify the likely hiring manager and members of the hiring team for this role. Search LinkedIn, the company website, press releases, conference talks, and any other public sources.
+  - For each person identified: name, title, how long they've been at the company, background before joining, any public writing, talks, or stated priorities.
+  - Assess their likely personality profile based on public signals: communication style, what they seem to value, any red flags or strong preferences visible in their public presence.
+  - Confidence-label everything. If the hiring manager can't be identified, say so.
+- Apply confidence labels to every claim. Tag quantitative claims with recency.
 
 **Outputs:**
-1. `{company-slug}_company-brief.md` — human-readable narrative report with six sections (inside scoop, mission, market position, product strategy, equity, interview intel)
-2. `{company-slug}_company-analysis.json` — structured JSON conforming to `references/company-analysis.schema.json`
+1. `{company-slug}_company-brief.md` — narrative report with seven sections: Inside Scoop, Mission, Market Position, Product Strategy, Equity, Interview Intel, Hiring Team Profiles
+2. `{company-slug}_company-analysis.json` — structured JSON per `references/company-analysis.schema.json`
 
-**After Stage 1:**
-Show the user the narrative brief and tell them the JSON file has been saved. Ask: *"Does this look right? Any corrections or gaps before I move to the cover letter?"* Incorporate feedback, then proceed to Stages 2 and 3.
-
----
-
-## Stage 2: Cover Letter
-
-Read `references/stage2-cover-letter.md` for the full prompt and output standards.
-
-**Core behavior:**
-- Load the company-analysis JSON from Stage 1 (or from a user-provided file if skipping Stage 1).
-- Only reference company facts where confidence ≥ "medium". Lower-confidence claims can appear as "based on recent company signals" without presenting them as certain.
-- The pre-draft analysis step is not optional — it's the part that actually makes the letter good.
-
-**Pre-draft analysis (do this before writing a single word of the letter):**
-1. Competitiveness assessment: where does this candidate rank against typical applicants for this role?
-2. Key strengths for this specific JD, and most likely hiring manager concerns.
-3. Recommended positioning strategy and narrative frame.
-
-Show this analysis to the user. Ask: *"Does this positioning feel right? Anything you'd adjust before I draft the letter?"* Get a green light before writing.
-
-**Output:**
-`{company-slug}_cover-letter.md` — one-page letter in clear, credible, engaging prose. No résumé bullet repetition. 100% factually supported.
+**⛔ STOP — Gate 2:** Present the narrative brief. Ask:
+*"Does this look right? Any corrections or insider knowledge I should factor in before we move on?"*
+Wait for the user's response. Incorporate any corrections, then proceed to Stage 3.
 
 ---
 
-## Stage 3: Resume Optimization
+## Stage 3: Resume Gap Analysis
 
-Read `references/stage3-resume-optimizer.md` for the full prompt and analysis framework.
+Read `references/stage3-gap-analysis.md` for the full prompt.
 
 **Core behavior:**
-- Frame the entire optimization around the business problem the hiring manager is trying to solve — not just skills matching.
-- Ask gap-filling questions before writing the optimized resume. The resume optimizer needs to surface experience the user may have left off their current resume.
+- Compare the resume against the JD requirements systematically.
+- Produce: alignment table (top 7–10 JD requirements vs. candidate experience, alignment strength), identified gaps, ATS keyword priorities.
+- Do NOT ask gap-filling questions here — that's Stage 4. Just identify the gaps.
 
-**Analysis first:**
-1. Alignment table: top 7 JD requirements vs. candidate's experience, keyword frequency, alignment strength.
-2. Gap assessment and gap-filling questions.
-3. ATS keyword priorities.
-4. Headline brainstorm (5 alternatives using literary devices: rule of three, juxtaposition, paradox).
+**Output:** Present the alignment table and gap list to the user. Proceed directly to Stage 4 without stopping — the user will engage during the Q&A.
 
-Show the analysis and ask the gap-filling questions. Wait for responses before producing the final document.
+---
 
-**Output:**
-`{company-slug}_resume-optimized.md` — full optimized resume: adjusted headline, revised professional summary (3-part structure: credibility + approach + impact), restructured skills section, enhanced experience bullets (≥80% quantified).
+## Stage 4: Experience Gap Questions
+
+**⛔ STOP — Gate 4 (ongoing):** This stage is entirely conversational. Ask gap-filling questions **one at a time**, as if in a live conversation. Do not present a bulleted list of questions. Wait for the user's answer before asking the next one.
+
+**Core behavior:**
+- Start with the highest-priority gap from Stage 3.
+- For each question, explain briefly why you're asking (what it unlocks for the application).
+- After each answer, either ask a follow-up or move to the next gap.
+- End only when the highest-impact gaps are closed — not when every possible question has been asked. Use judgment.
+- After each answer, write it immediately to `stage4_gap_answers` in `{company-slug}_session-state.json` — including the question asked, the user's answer, the gap it addresses, and any implication for resume bullets. Do not batch writes to the end of the stage; answers should persist even if the conversation is interrupted.
+
+**Example opening:** *"Before I move to strategy, I want to fill in a few gaps. First: [most important gap from Stage 3]. [One question.]"*
+
+---
+
+## Stage 5: Application Strategy
+
+Read `references/stage5-application-strategy.md` for the full prompt.
+
+**⛔ STOP — Gate 5:** Present the strategy analysis and wait for explicit user approval before proceeding to resume work.
+
+**Core behavior:**
+1. **Applicant pool analysis:** Who else is likely applying? What does the typical strong candidate look like? What does the typical weak candidate look like?
+2. **Competitiveness assessment:** Where does this candidate sit in that pool? Be honest. If the candidate is unlikely to get an interview, say so clearly — opportunity cost is real. Use a plain rating (e.g., top quartile / middle of the pack / long shot) with reasoning.
+3. **Positioning options:** Based on the assessment, propose 2–3 distinct positioning strategies. Each strategy should have a name, a core narrative, what it emphasizes, and what it de-emphasizes. These should represent meaningfully different choices — not stylistic variations of the same strategy.
+
+Present the analysis and ask: *"Which positioning direction feels right, or would you like to adjust any of these? This will shape the resume headline, summary, and cover letter."* Wait for the user's choice before continuing. Write the approved strategy to `stage5_strategy` in `{company-slug}_session-state.json`, including the competitiveness verdict and reasoning.
+
+---
+
+## Stage 6: Headline Brainstorm
+
+Read `references/stage6-headline.md` for the full prompt.
+
+**⛔ STOP — Gate 6:** Present headline options and wait for the user to pick or request revisions.
+
+**Core behavior:**
+- Using the approved positioning strategy from Stage 5, generate 5 headline alternatives using literary devices: rule of three, juxtaposition, paradox, specificity, contrast.
+- For each: show the headline and one sentence explaining the strategic logic.
+- Ask the user to pick one, request changes, or say "none of these — let's try again."
+- Iterate until the user approves. Write the approved headline to `stage6_headline` in `{company-slug}_session-state.json`.
+
+---
+
+## Stage 7: Professional Summary
+
+**⛔ STOP — Gate 7:** Show draft, iterate, wait for explicit approval.
+
+**Core behavior:**
+- Write a professional summary using the three-part structure: credibility statement → approach/method → impact statement.
+- Ground it in the approved positioning strategy and headline direction.
+- Write in first person. Match JD language without sounding optimized.
+- Present the draft and ask for feedback. Revise until approved. Write the approved summary to `stage7_summary` in `{company-slug}_session-state.json`.
+
+---
+
+## Stage 8: Full Resume Customization
+
+Read `references/stage8-resume-customization.md` for the full prompt.
+
+**⛔ STOP — Gate 8:** Present the complete optimized resume and wait for user approval.
+
+**Core behavior:**
+- Read `{company-slug}_session-state.json` at the start of this stage. All inputs (positioning strategy, headline, summary, gap answers) come from there — not from conversation history.
+- Update the skills section: category headers matching job priorities, only skills the candidate actually has, ordered by relevance.
+- Update each experience role: add context sentence, rewrite bullets for relevance, ≥80% of bullets quantified. No fabrication. Surface the answers from Stage 4.
+- Save the complete resume as `{company-slug}_resume-optimized.md`.
+- Present it and ask: *"How does this look? Any bullets you want changed, anything that doesn't sound like you?"* Revise until approved.
+
+---
+
+## Stage 9: Additional Application Materials
+
+**⛔ STOP — Gate 9:** Ask before starting cover letter work.
+
+**Core behavior:**
+Ask: *"Before I start the cover letter — are there any other application requirements? Things like: essays on specific topics, short-answer questions, portfolio or work sample links, or anything else the application form asks for."*
+
+- If yes: help the user complete those materials first, save to `{company-slug}_additional-materials.md`. Write a summary of what was produced and its cover letter implications to `stage9_additional_materials` in `{company-slug}_session-state.json`.
+- If no: write `{"has_additional_requirements": false}` to `stage9_additional_materials` in `{company-slug}_session-state.json` and proceed to Stage 10.
+
+---
+
+## Stage 10: Cover Letter
+
+Read `references/stage10-cover-letter.md` for the full prompt and output standards.
+
+**⛔ STOP — Gate 10 (multiple points):**
+1. Ask for a personal story or anecdote before drafting.
+2. Show the pre-draft strategy and wait for approval.
+3. Show the draft and iterate until approved.
+
+**Core behavior:**
+- Read `{company-slug}_session-state.json` at the start of this stage. The positioning strategy, personal story, and additional materials implications all come from there.
+
+**Step 10a — Personal story:** Ask the user: *"Is there a specific story, moment, or personal connection to this company's mission that you'd want in the cover letter? Something that doesn't appear in the resume."* Write the answer (or `{"provided": false}` if none) to `stage10_personal_story` in `{company-slug}_session-state.json` before drafting anything.
+
+**Step 10b — Pre-draft strategy:** Before writing, present:
+- Opening hook approach (one sentence on what angle you'll lead with)
+- Body structure (what each paragraph will accomplish)
+- Closing approach
+Ask: *"Does this structure feel right?"* Get a green light.
+
+**Step 10c — Draft and iterate:** Write the letter. Present it. Ask for feedback. Revise until approved. Save final to `{company-slug}_cover-letter.md`.
+
+**Standards:**
+- Maximum one page.
+- No résumé bullet repetition — interpret significance, don't repeat stats.
+- 100% factually supported.
+- Only use company-analysis JSON facts where confidence ≥ medium.
+- Integrate any additional materials content from Stage 9 without contradiction.
 
 ---
 
 ## Handoff Notes
 
-A few things that matter for quality across all three stages:
+**Don't invent things.** Every claim must trace back to the resume, user answers from Stage 4, web research, or the JD.
 
-**Don't invent things.** None of the three stages should produce claims not grounded in either web research, the attached resume, or the job description. If a gap needs filling, ask rather than guess.
+**The JSON schema carries the confidence signal.** Stage 10 reads it; low-confidence claims get softened language ("based on recent signals") not direct assertion.
 
-**The JSON schema carries the confidence signal.** When Stage 2 reads the company-analysis JSON, it reads the confidence field on every claim and adjusts its language accordingly. Don't strip that signal.
+**Gates are the design, not friction.** They exist because the quality of the output is a direct function of the conversation. An AI that skips them is faster and worse.
 
-**The pre-draft approval steps aren't friction — they're the design.** Both Stage 2 (positioning approval) and Stage 3 (gap-filling questions) have intentional human checkpoints. Don't skip them for speed. They're why the outputs are better than template-generated letters.
-
-**One folder, multiple files.** By the end of the pipeline, the user should have a complete application package in one place: the research brief they can use for interview prep, the tailored cover letter, and the optimized resume.
+**One folder, multiple files.** By the end, the user has a complete application package: company brief for interview prep, optimized resume, cover letter, and any additional materials.
 
 ---
 
 ## References
 
-- `references/stage1-company-research.md` — Full company research prompt with research standards and JSON output spec
-- `references/stage2-cover-letter.md` — Full cover letter prompt with rules of engagement and output format
-- `references/stage3-resume-optimizer.md` — Full resume optimization prompt with analysis framework
-- `references/company-analysis.schema.json` — JSON schema for Stage 1 → Stage 2 handoff
+- `references/stage1-jd-review.md` — JD parsing prompt and structured output format
+- `references/stage2-company-research.md` — Company + hiring team research prompt and standards
+- `references/stage3-gap-analysis.md` — Gap analysis framework and alignment table format
+- `references/stage5-application-strategy.md` — Applicant pool, competitiveness, and positioning framework
+- `references/stage6-headline.md` — Headline brainstorm prompt and literary device guide
+- `references/stage8-resume-customization.md` — Full resume optimization prompt
+- `references/stage10-cover-letter.md` — Cover letter prompt, rules, and structure
+- `references/company-analysis.schema.json` — JSON schema for Stage 2 company research output
+- `references/session-state.schema.json` — JSON schema for accumulating approved decisions across Stages 4–10

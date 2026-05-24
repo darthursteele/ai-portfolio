@@ -1,20 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Company Analysis Schema v1",
-  "description": "Machine-readable structure for cross-agent handoff of company analysis results used in cover-letter and interview preparation workflows.",
+  "title": "Company Analysis Schema v1.1.0",
+  "description": "Machine-readable structure for cross-stage handoff of company and hiring team intelligence used in application pipeline workflows.",
   "type": "object",
   "required": ["schema_version", "company", "role_context", "metadata"],
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0.0"
+      "const": "1.1.0"
     },
     "company": {
       "type": "object",
       "required": ["name", "slug"],
       "properties": {
         "name": { "type": "string" },
-        "slug": { "type": "string" }
+        "slug": { "type": "string" },
+        "website": { "type": "string", "format": "uri" }
       }
     },
     "role_context": {
@@ -38,6 +39,31 @@
             "properties": {
               "url": { "type": "string", "format": "uri" },
               "retrieved_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    },
+    "inside_scoop": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+            "sources": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "representative_quotes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "quote": { "type": "string" },
+              "source": { "type": "string" },
+              "date": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] }
             }
           }
         }
@@ -71,7 +97,27 @@
       "type": "object",
       "properties": {
         "position": { "type": "string" },
-        "competitors": { "type": "array", "items": { "type": "string" } }
+        "competitors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+            }
+          }
+        },
+        "differentiators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "point": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "source_url": { "type": "string", "format": "uri" }
+            }
+          }
+        }
       }
     },
     "product_strategy": {
@@ -82,8 +128,8 @@
           "items": {
             "type": "object",
             "properties": {
-              "statement": { "type": "string" },
-              "as_of": { "type": "string" },
+              "strategy": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
               "source_url": { "type": "string", "format": "uri" }
             }
           }
@@ -93,10 +139,43 @@
           "items": {
             "type": "object",
             "properties": {
-              "signal": { "type": "string" },
+              "strategy": { "type": "string" },
               "confidence": { "enum": ["high", "medium", "low", "speculation"] },
-              "sources": { "type": "array", "items": { "type": "string", "format": "uri" } }
+              "note": { "type": "string" }
             }
+          }
+        }
+      }
+    },
+    "equity": {
+      "type": "object",
+      "properties": {
+        "total_raised": { "type": "string" },
+        "last_round": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "amount": { "type": "string" },
+            "date": { "type": "string" },
+            "lead_investor": { "type": "string" },
+            "other_investors": { "type": "array", "items": { "type": "string" } },
+            "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+            "source_url": { "type": "string", "format": "uri" }
+          }
+        },
+        "estimated_valuation": {
+          "type": "object",
+          "properties": {
+            "range": { "type": "string" },
+            "source": { "type": "string" },
+            "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+          }
+        },
+        "ipo_acquisition_outlook": {
+          "type": "object",
+          "properties": {
+            "assessment": { "type": "string" },
+            "confidence": { "enum": ["high", "medium", "low", "speculation"] }
           }
         }
       }
@@ -121,11 +200,63 @@
           "items": {
             "type": "object",
             "properties": {
-              "title": { "type": "string" },
+              "milestone": { "type": "string" },
               "date": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
               "source_url": { "type": "string", "format": "uri" }
             }
           }
+        },
+        "red_flags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "flag": { "type": "string" },
+              "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+            }
+          }
+        }
+      }
+    },
+    "hiring_team": {
+      "type": "object",
+      "description": "Profiles of the likely hiring manager and team members for this specific role.",
+      "properties": {
+        "identified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "title": { "type": "string" },
+              "tenure_at_company": { "type": "string" },
+              "prior_background": { "type": "string" },
+              "public_signals": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "signal": { "type": "string" },
+                    "source_url": { "type": "string", "format": "uri" },
+                    "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+                  }
+                }
+              },
+              "personality_profile": {
+                "type": "object",
+                "properties": {
+                  "summary": { "type": "string" },
+                  "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+                }
+              },
+              "application_implications": { "type": "string" }
+            }
+          }
+        },
+        "identification_status": {
+          "type": "string",
+          "description": "e.g., 'Hiring manager identified with high confidence', 'Team partially identified', 'Could not identify hiring manager'"
         }
       }
     }

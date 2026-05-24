@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Application Pipeline Session State v1.0.0",
+  "description": "Accumulates user-approved decisions and gap-filling answers across pipeline stages. Written incrementally — each stage appends its outputs. Downstream stages read from this file rather than scraping conversation history.",
+  "type": "object",
+  "required": ["schema_version", "company", "role", "created_at"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "company": { "type": "string" },
+    "role": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "last_updated_at": { "type": "string", "format": "date-time" },
+
+    "stage4_gap_answers": {
+      "description": "Answers collected during Stage 4 conversational Q&A. Written after each answer, not at the end of the stage.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question", "answer", "gap_addressed"],
+        "properties": {
+          "question": {
+            "type": "string",
+            "description": "The exact question asked"
+          },
+          "answer": {
+            "type": "string",
+            "description": "The user's answer, verbatim or lightly paraphrased for clarity"
+          },
+          "gap_addressed": {
+            "type": "string",
+            "description": "Which gap from Stage 3 this answer closes or partially closes"
+          },
+          "resume_implication": {
+            "type": "string",
+            "description": "How this answer should be reflected in the resume — new bullet, updated wording, skills addition, etc. Leave blank if not yet determined."
+          }
+        }
+      }
+    },
+
+    "stage5_strategy": {
+      "description": "Approved positioning strategy from Stage 5. Written after user confirms.",
+      "type": "object",
+      "properties": {
+        "chosen_strategy_name": { "type": "string" },
+        "core_narrative": {
+          "type": "string",
+          "description": "One sentence: what story does this strategy tell?"
+        },
+        "emphasizes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "What to foreground in the resume and cover letter"
+        },
+        "de_emphasizes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "What to background or not address directly"
+        },
+        "competitiveness_verdict": {
+          "type": "string",
+          "enum": ["top quartile", "competitive", "long shot", "unlikely"],
+          "description": "Honest assessment from Stage 5 analysis"
+        },
+        "competitiveness_reasoning": { "type": "string" }
+      }
+    },
+
+    "stage6_headline": {
+      "description": "Approved resume headline from Stage 6. Written after user explicitly approves.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "literary_device_used": { "type": "string" },
+        "strategic_logic": { "type": "string" }
+      }
+    },
+
+    "stage7_summary": {
+      "description": "Approved professional summary from Stage 7. Written after user explicitly approves.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "credibility_statement": { "type": "string" },
+        "approach_statement": { "type": "string" },
+        "impact_statement": { "type": "string" }
+      }
+    },
+
+    "stage9_additional_materials": {
+      "description": "Summary of any additional application requirements identified in Stage 9 and how they should influence the cover letter.",
+      "type": "object",
+      "properties": {
+        "has_additional_requirements": { "type": "boolean" },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "e.g., 'essay', 'short-answer question', 'portfolio link', 'work sample'"
+              },
+              "prompt_or_description": { "type": "string" },
+              "filename": {
+                "type": "string",
+                "description": "Where the completed material was saved, if applicable"
+              },
+              "cover_letter_implication": {
+                "type": "string",
+                "description": "What the cover letter should not repeat or contradict from this material"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "stage10_personal_story": {
+      "description": "Personal story or anecdote from Stage 10a, if the user provided one.",
+      "type": "object",
+      "properties": {
+        "provided": { "type": "boolean" },
+        "story": {
+          "type": "string",
+          "description": "The story or anecdote in the user's own words"
+        },
+        "placement": {
+          "type": "string",
+          "description": "Where in the cover letter this story should appear — opening, body, or closing"
+        }
+      }
+    }
+  }
+}
