@@ -1,76 +1,151 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Application Pipeline Session State v1.0.0",
-  "description": "Accumulates user-approved decisions and gap-filling answers across pipeline stages. Written incrementally — each stage appends its outputs. Downstream stages read from this file rather than scraping conversation history.",
+  "title": "Application Pipeline Session State v1.1.0",
+  "description": "Accumulates user-approved decisions and research outputs across pipeline stages. Initialized at Stage 2, written incrementally after each stage. Downstream stages read from this file rather than scraping conversation history.",
   "type": "object",
   "required": ["schema_version", "company", "role", "created_at"],
   "properties": {
-    "schema_version": {
-      "type": "string",
-      "const": "1.0.0"
-    },
+    "schema_version": { "type": "string", "const": "1.1.0" },
     "company": { "type": "string" },
     "role": { "type": "string" },
     "created_at": { "type": "string", "format": "date-time" },
     "last_updated_at": { "type": "string", "format": "date-time" },
+    "last_completed_stage": { "type": "integer", "minimum": 1, "maximum": 10 },
+
+    "stage1_jd_flags": {
+      "description": "Written at end of Stage 1. Context-dependent JD phrases held for reinterpretation after company research.",
+      "type": "object",
+      "properties": {
+        "context_dependent_phrases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["phrase", "why_ambiguous"],
+            "properties": {
+              "phrase": { "type": "string" },
+              "why_ambiguous": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "stage2_hm_profile": {
+      "description": "Written at end of Stage 2. Structured hiring manager profile consumed by the Hiring Manager Filter at Stages 5, 6, 7, 8, and 10.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name or 'Unknown'" },
+        "confidence": { "$ref": "#/$defs/confidence_level" },
+        "background": { "type": "string", "description": "One sentence: career path and functional origin" },
+        "values_signals": {
+          "type": "array",
+          "description": "3-5 concrete things they demonstrably care about",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 5
+        },
+        "communication_style": { "type": "string" },
+        "likely_confident_if": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "likely_skeptical_if": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "jd_tone_signals": { "type": "string" }
+      },
+      "required": ["name", "confidence"]
+    },
+
+    "stage2_hiring_problem": {
+      "description": "Written at end of Stage 2. The synthesized hiring problem — primary editorial lens for all downstream stages.",
+      "type": "object",
+      "properties": {
+        "primary_problem": { "type": "string" },
+        "secondary_goals": { "type": "array", "items": { "type": "string" } },
+        "implied_urgency": { "type": "string" },
+        "bad_hire_looks_like": { "type": "string" },
+        "resolved_jd_phrases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["phrase", "resolved_meaning"],
+            "properties": {
+              "phrase": { "type": "string" },
+              "resolved_meaning": { "type": "string" }
+            }
+          }
+        },
+        "user_corrections": { "type": ["string", "null"] }
+      },
+      "required": ["primary_problem"]
+    },
+
+    "stage3_ats_keywords": {
+      "description": "Written at end of Stage 3. ATS keyword mapping consumed by Stage 8 resume rewriting.",
+      "type": "object",
+      "required": ["high_priority_additions", "present_keywords", "absent_gaps"],
+      "properties": {
+        "high_priority_additions": {
+          "type": "array",
+          "description": "Absent from resume but supportable — highest-priority rewrite targets",
+          "items": { "type": "string" }
+        },
+        "present_keywords": {
+          "type": "array",
+          "description": "Already present on the resume",
+          "items": { "type": "string" }
+        },
+        "absent_gaps": {
+          "type": "array",
+          "description": "Absent and not supportable — do not add these",
+          "items": { "type": "string" }
+        }
+      }
+    },
 
     "stage4_gap_answers": {
-      "description": "Answers collected during Stage 4 conversational Q&A. Written after each answer, not at the end of the stage.",
+      "description": "Written incrementally during Stage 4 — one entry per Q&A exchange. Do not batch; write after each answer.",
       "type": "array",
       "items": {
         "type": "object",
         "required": ["question", "answer", "gap_addressed"],
         "properties": {
-          "question": {
-            "type": "string",
-            "description": "The exact question asked"
-          },
-          "answer": {
-            "type": "string",
-            "description": "The user's answer, verbatim or lightly paraphrased for clarity"
-          },
-          "gap_addressed": {
-            "type": "string",
-            "description": "Which gap from Stage 3 this answer closes or partially closes"
-          },
+          "question": { "type": "string", "description": "The exact question asked" },
+          "answer": { "type": "string", "description": "The user's answer, verbatim or lightly paraphrased" },
+          "gap_addressed": { "type": "string" },
           "resume_implication": {
             "type": "string",
-            "description": "How this answer should be reflected in the resume — new bullet, updated wording, skills addition, etc. Leave blank if not yet determined."
+            "description": "How this answer should surface in the resume — new bullet, updated wording, skills addition, etc."
           }
         }
       }
     },
 
     "stage5_strategy": {
-      "description": "Approved positioning strategy from Stage 5. Written after user confirms.",
+      "description": "Written after user confirms at Gate 5.",
       "type": "object",
       "properties": {
         "chosen_strategy_name": { "type": "string" },
-        "core_narrative": {
-          "type": "string",
-          "description": "One sentence: what story does this strategy tell?"
-        },
-        "emphasizes": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "What to foreground in the resume and cover letter"
-        },
-        "de_emphasizes": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "What to background or not address directly"
-        },
+        "core_narrative": { "type": "string", "description": "One sentence: what story does this strategy tell?" },
+        "emphasizes": { "type": "array", "items": { "type": "string" } },
+        "de_emphasizes": { "type": "array", "items": { "type": "string" } },
+        "hiring_problem_connection": { "type": "string" },
         "competitiveness_verdict": {
           "type": "string",
-          "enum": ["top quartile", "competitive", "long shot", "unlikely"],
-          "description": "Honest assessment from Stage 5 analysis"
+          "enum": ["top quartile", "competitive", "long shot", "unlikely"]
         },
         "competitiveness_reasoning": { "type": "string" }
       }
     },
 
     "stage6_headline": {
-      "description": "Approved resume headline from Stage 6. Written after user explicitly approves.",
+      "description": "Written after user explicitly approves at Gate 6.",
       "type": "object",
       "properties": {
         "text": { "type": "string" },
@@ -80,7 +155,7 @@
     },
 
     "stage7_summary": {
-      "description": "Approved professional summary from Stage 7. Written after user explicitly approves.",
+      "description": "Written after user explicitly approves at Gate 7.",
       "type": "object",
       "properties": {
         "text": { "type": "string" },
@@ -91,7 +166,7 @@
     },
 
     "stage9_additional_materials": {
-      "description": "Summary of any additional application requirements identified in Stage 9 and how they should influence the cover letter.",
+      "description": "Written at Gate 9.",
       "type": "object",
       "properties": {
         "has_additional_requirements": { "type": "boolean" },
@@ -100,19 +175,10 @@
           "items": {
             "type": "object",
             "properties": {
-              "type": {
-                "type": "string",
-                "description": "e.g., 'essay', 'short-answer question', 'portfolio link', 'work sample'"
-              },
+              "type": { "type": "string" },
               "prompt_or_description": { "type": "string" },
-              "filename": {
-                "type": "string",
-                "description": "Where the completed material was saved, if applicable"
-              },
-              "cover_letter_implication": {
-                "type": "string",
-                "description": "What the cover letter should not repeat or contradict from this material"
-              }
+              "filename": { "type": "string" },
+              "cover_letter_implication": { "type": "string" }
             }
           }
         }
@@ -120,19 +186,25 @@
     },
 
     "stage10_personal_story": {
-      "description": "Personal story or anecdote from Stage 10a, if the user provided one.",
+      "description": "Written at Step 10a before cover letter drafting.",
       "type": "object",
       "properties": {
         "provided": { "type": "boolean" },
-        "story": {
-          "type": "string",
-          "description": "The story or anecdote in the user's own words"
-        },
+        "story": { "type": ["string", "null"] },
         "placement": {
           "type": "string",
           "description": "Where in the cover letter this story should appear — opening, body, or closing"
         }
-      }
+      },
+      "required": ["provided"]
+    }
+  },
+
+  "$defs": {
+    "confidence_level": {
+      "type": "string",
+      "enum": ["high", "medium", "low", "speculation"],
+      "description": "high = multiple corroborating sources; medium = single credible source or strong inference; low = single weak signal; speculation = educated guess with no direct evidence"
     }
   }
 }

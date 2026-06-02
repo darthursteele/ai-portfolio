@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Company Analysis Schema v1.1.0",
-  "description": "Machine-readable structure for cross-stage handoff of company and hiring team intelligence used in application pipeline workflows.",
+  "title": "Company Analysis Schema v1.2.0",
+  "description": "Machine-readable structure for cross-stage handoff of company and hiring team intelligence. Stage 10 reads this directly — only use facts where confidence >= medium in the cover letter.",
   "type": "object",
   "required": ["schema_version", "company", "role_context", "metadata"],
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.1.0"
+      "const": "1.2.0"
     },
     "company": {
       "type": "object",
@@ -51,7 +51,7 @@
           "type": "object",
           "properties": {
             "text": { "type": "string" },
-            "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+            "confidence": { "$ref": "#/$defs/confidence_level" },
             "sources": { "type": "array", "items": { "type": "string" } }
           }
         },
@@ -63,7 +63,7 @@
               "quote": { "type": "string" },
               "source": { "type": "string" },
               "date": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+              "confidence": { "$ref": "#/$defs/confidence_level" }
             }
           }
         }
@@ -76,7 +76,7 @@
           "type": "object",
           "properties": {
             "text": { "type": "string" },
-            "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+            "confidence": { "$ref": "#/$defs/confidence_level" },
             "source_url": { "type": "string", "format": "uri" }
           }
         },
@@ -86,7 +86,7 @@
             "type": "object",
             "properties": {
               "problem": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "confidence": { "$ref": "#/$defs/confidence_level" },
               "source_url": { "type": "string", "format": "uri" }
             }
           }
@@ -103,7 +103,7 @@
             "type": "object",
             "properties": {
               "name": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+              "confidence": { "$ref": "#/$defs/confidence_level" }
             }
           }
         },
@@ -113,7 +113,7 @@
             "type": "object",
             "properties": {
               "point": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "confidence": { "$ref": "#/$defs/confidence_level" },
               "source_url": { "type": "string", "format": "uri" }
             }
           }
@@ -129,7 +129,7 @@
             "type": "object",
             "properties": {
               "strategy": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "confidence": { "$ref": "#/$defs/confidence_level" },
               "source_url": { "type": "string", "format": "uri" }
             }
           }
@@ -140,7 +140,7 @@
             "type": "object",
             "properties": {
               "strategy": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "confidence": { "$ref": "#/$defs/confidence_level" },
               "note": { "type": "string" }
             }
           }
@@ -159,7 +159,7 @@
             "date": { "type": "string" },
             "lead_investor": { "type": "string" },
             "other_investors": { "type": "array", "items": { "type": "string" } },
-            "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+            "confidence": { "$ref": "#/$defs/confidence_level" },
             "source_url": { "type": "string", "format": "uri" }
           }
         },
@@ -168,14 +168,14 @@
           "properties": {
             "range": { "type": "string" },
             "source": { "type": "string" },
-            "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+            "confidence": { "$ref": "#/$defs/confidence_level" }
           }
         },
         "ipo_acquisition_outlook": {
           "type": "object",
           "properties": {
             "assessment": { "type": "string" },
-            "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+            "confidence": { "$ref": "#/$defs/confidence_level" }
           }
         }
       }
@@ -189,7 +189,7 @@
             "type": "object",
             "properties": {
               "challenge": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "confidence": { "$ref": "#/$defs/confidence_level" },
               "source_url": { "type": "string", "format": "uri" }
             }
           }
@@ -202,7 +202,7 @@
             "properties": {
               "milestone": { "type": "string" },
               "date": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] },
+              "confidence": { "$ref": "#/$defs/confidence_level" },
               "source_url": { "type": "string", "format": "uri" }
             }
           }
@@ -213,7 +213,7 @@
             "type": "object",
             "properties": {
               "flag": { "type": "string" },
-              "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+              "confidence": { "$ref": "#/$defs/confidence_level" }
             }
           }
         }
@@ -227,9 +227,14 @@
           "type": "array",
           "items": {
             "type": "object",
+            "required": ["name", "title", "confidence"],
             "properties": {
               "name": { "type": "string" },
               "title": { "type": "string" },
+              "role_in_hiring": {
+                "type": "string",
+                "enum": ["hiring manager", "likely interviewer", "recruiter", "executive sponsor", "unknown"]
+              },
               "tenure_at_company": { "type": "string" },
               "prior_background": { "type": "string" },
               "public_signals": {
@@ -239,7 +244,7 @@
                   "properties": {
                     "signal": { "type": "string" },
                     "source_url": { "type": "string", "format": "uri" },
-                    "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+                    "confidence": { "$ref": "#/$defs/confidence_level" }
                   }
                 }
               },
@@ -247,10 +252,14 @@
                 "type": "object",
                 "properties": {
                   "summary": { "type": "string" },
-                  "confidence": { "enum": ["high", "medium", "low", "speculation"] }
+                  "confidence": { "$ref": "#/$defs/confidence_level" }
                 }
               },
-              "application_implications": { "type": "string" }
+              "application_implications": {
+                "type": "string",
+                "description": "How knowledge of this person should shape the resume, cover letter, or interview prep"
+              },
+              "confidence": { "$ref": "#/$defs/confidence_level" }
             }
           }
         },
@@ -259,6 +268,33 @@
           "description": "e.g., 'Hiring manager identified with high confidence', 'Team partially identified', 'Could not identify hiring manager'"
         }
       }
+    },
+    "hiring_problem": {
+      "type": "object",
+      "description": "Synthesized hiring problem statement produced at end of Stage 2. Primary editorial lens for all downstream stages.",
+      "properties": {
+        "primary_problem": { "type": "string" },
+        "secondary_goals": { "type": "array", "items": { "type": "string" } },
+        "implied_urgency": { "type": "string" },
+        "bad_hire_looks_like": { "type": "string" },
+        "resolved_jd_phrases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "phrase": { "type": "string" },
+              "resolved_meaning": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "confidence_level": {
+      "type": "string",
+      "enum": ["high", "medium", "low", "speculation"],
+      "description": "high = multiple corroborating sources; medium = single credible source or strong inference; low = single weak signal; speculation = educated guess with no direct evidence"
     }
   }
 }

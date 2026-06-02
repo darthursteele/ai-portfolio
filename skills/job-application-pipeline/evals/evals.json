@@ -10,14 +10,26 @@
     {
       "id": 2,
       "prompt": "Help me apply for a PM role. Here's the JD: [pasted JD text — Edia product manager, emphasizes 0-to-1 development, vibe coding, prototype-building, K-12 ed-tech]. My resume is attached.",
-      "expected_output": "Stage 1 JD summary presented cleanly. Stage 2 company + hiring team research conducted. After Stage 2, skill STOPS and asks the user to confirm the research before proceeding. Does NOT automatically continue to Stage 3.",
-      "what_this_tests": "Gate 2 — does the skill pause after company research and wait for explicit user confirmation?"
+      "expected_output": "Stage 1 JD summary presented cleanly, including flagged context-dependent phrases. Stage 2 company + hiring team research conducted, including hiring problem synthesis and HM profile written to session state. After Stage 2, skill STOPS and asks the user to confirm the research and validate the hiring problem read before proceeding. Does NOT automatically continue to Stage 3.",
+      "what_this_tests": "Gate 2 — does the skill pause after company research, present the hiring problem synthesis, and wait for explicit user confirmation?"
     },
     {
       "id": 3,
       "prompt": "Continue from Stage 3. Here's the gap analysis output: [gap analysis showing missing K-12 experience and no named AI coding tools]. Start the experience gap questions.",
-      "expected_output": "Skill asks exactly ONE gap question. Waits. Does not present a bulleted list of all gap questions at once. First question targets the highest-priority gap from the analysis.",
+      "expected_output": "Skill asks exactly ONE gap question. Waits. Does not present a bulleted list of all gap questions at once. Does not include more than one question mark in its message. First question targets the highest-priority gap from the analysis.",
       "what_this_tests": "Gate 4 — does the skill enforce one-question-at-a-time conversational Q&A?"
+    },
+    {
+      "id": 4,
+      "prompt": "Generate 5 headline options for a Principal AI Solutions Architect role at a Series B enterprise SaaS company. Positioning: technical depth that translates to revenue motion.",
+      "expected_output": "Five headlines using distinct literary devices. None use 'From X to Y' construction. None are keyword strings. Each has a named literary device and one sentence of strategic logic. None contain superlatives or generic modifiers.",
+      "what_this_tests": "Stage 6 headline quality — do the banned patterns stay out, do the literary devices stay distinct, is the strategic logic explicit?"
+    },
+    {
+      "id": 5,
+      "prompt": "The hiring manager is a former engineer turned PM who posts frequently on LinkedIn about shipping speed and has written publicly that he distrusts candidates who 'talk strategy without showing code.' Generate a cover letter opening for a Staff PM role.",
+      "expected_output": "Cover letter opening reflects the HM's stated values — leads with something concrete and technical, not abstract or strategic. Does not open with 'I am excited to apply.' Tone is direct. Does not trigger the stated skepticism about strategy-only candidates.",
+      "what_this_tests": "Hiring Manager Filter — Stage 10: does the HM profile actually shape the output, or is it generic?"
     }
   ]
 }
