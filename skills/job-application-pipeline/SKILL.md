@@ -86,7 +86,7 @@ Read `references/stage2-company-research.md` for the full prompt and research st
   - For each person identified: name, title, how long they've been at the company, background before joining, any public writing, talks, or stated priorities.
   - Assess their likely personality profile based on public signals: communication style, what they seem to value, any red flags or strong preferences visible in their public presence.
   - Confidence-label everything. If the hiring manager can't be identified, say so.
-- Apply confidence labels to every claim. Tag quantitative claims with recency.
+- Apply confidence labels to every claim. Tag **all** quantitative claims with recency — this includes funding figures, valuations, headcount, and industry benchmark ranges (e.g., "ARR estimate (as of ~2024–2025)"). No quantitative number or range should appear without a recency marker.
 
 **Outputs:**
 1. `{company-slug}_company-brief.md` — narrative report with seven sections: Inside Scoop, Mission, Market Position, Product Strategy, Equity, Interview Intel, Hiring Team Profiles
@@ -118,7 +118,7 @@ Read `references/stage3-gap-analysis.md` for the full prompt.
 
 ## Stage 4: Experience Gap Questions
 
-**⛔ STOP — Gate 4 (ongoing):** This stage is entirely conversational. Ask gap-filling questions **one at a time**, as if in a live conversation. Do not present a bulleted list of questions. Wait for the user's answer before asking the next one.
+**⛔ STOP — Gate 4 (ongoing):** This stage is entirely conversational. Ask gap-filling questions **one at a time** — exactly one question per message, one question mark. Do not combine multiple questions into a single paragraph or sentence, even without list formatting. Do not present a bulleted or numbered list of questions. Wait for the user's answer before asking the next one.
 
 **Core behavior:**
 - Start with the highest-priority gap from Stage 3.
@@ -127,7 +127,7 @@ Read `references/stage3-gap-analysis.md` for the full prompt.
 - Aim for 5–6 questions total. Prioritize questions that affect the competitiveness assessment (Stage 5) or could surface new resume bullets — those are the highest-value. Stop when those are covered, even if minor gaps remain. Don't ask about gaps that are either unaddressable (true missing experience) or already adequately covered by the resume.
 - After each answer, write it immediately to `stage4_gap_answers` in `{company-slug}_session-state.json` — including the question asked, the user's answer, the gap it addresses, and any implication for resume bullets. Do not batch writes to the end of the stage; answers should persist even if the conversation is interrupted.
 
-**Example opening:** *"Before I move to strategy, I want to fill in a few gaps. First: [most important gap from Stage 3]. [One question.]"*
+**Example opening:** *"Before I move to strategy, I want to fill in a few gaps. First: [most important gap from Stage 3]. [One question, one question mark.]"*
 
 ---
 
