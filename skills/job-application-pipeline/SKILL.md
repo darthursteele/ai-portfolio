@@ -81,61 +81,118 @@ Read `references/stage1-jd-review.md` for the full prompt.
 
 Read `references/stage2-company-research.md` for the full prompt and research standards.
 
-**Core behavior:**
-- Research the company per the existing standards (mission, market position, product strategy, equity, culture, interview intel).
-- **Additionally:** Attempt to identify the likely hiring manager and members of the hiring team for this role. Search LinkedIn, the company website, press releases, conference talks, and any other public sources.
-  - For each person identified: name, title, how long they've been at the company, background before joining, any public writing, talks, or stated priorities.
-  - Assess their likely personality profile based on public signals: communication style, what they seem to value, any red flags or strong preferences visible in their public presence.
-  - Confidence-label everything. If the hiring manager can't be identified, say so.
-- Apply confidence labels to every claim. Tag **all** quantitative claims with recency — this includes funding figures, valuations, headcount, and industry benchmark ranges (e.g., "ARR estimate (as of ~2024–2025)"). No quantitative number or range should appear without a recency marker.
+### Environment Detection
 
-**Outputs:**
-1. `{company-slug}_company-brief.md` — narrative report with seven sections: Inside Scoop, Mission, Market Position, Product Strategy, Equity, Interview Intel, Hiring Team Profiles
-2. `{company-slug}_company-analysis.json` — structured JSON per `references/company-analysis.schema.json`
+**Before starting any research, check whether the `Task` tool is available.**
 
-**Hiring Manager Profile — write to session state as `stage2_hm_profile`:**
+- **If `Task` is available (Claude Code CLI):** Use the parallel subagent path below. Each research workstream gets a clean, focused context window — this is the primary quality advantage.
+- **If `Task` is not available (chat/Cowork):** Run the four research areas sequentially in a single context. Same output format, same standards, just linear. The subagent prompt files in `subagents/` still apply as extended research guidance.
 
-After the narrative brief is complete, distill the hiring manager research into a structured profile for downstream use. If the hiring manager couldn't be identified, populate what can be inferred from the JD's tone, emphasis, and seniority signals, and flag it as inferred. Write this to `stage2_hm_profile` in `{company-slug}_session-state.json`:
+---
+
+### Parallel Path (Claude Code CLI)
+
+Spawn four subagents simultaneously using the `Task` tool. Each receives its focused prompt and writes to a partial JSON. Do not wait for one before starting the next.
+
+**Agent A — Company Fundamentals**
+Prompt: `subagents/stage2-agent-a-fundamentals.md`
+Inputs: company name, role, JD text
+Output: `{company-slug}_stage2_a_fundamentals.json`
+Covers: mission, market position, competitors, product strategy (confirmed + inferred), equity/funding
+
+**Agent B — Culture & Interview Intel**
+Prompt: `subagents/stage2-agent-b-culture.md`
+Inputs: company name, role, department
+Output: `{company-slug}_stage2_b_culture.json`
+Covers: Glassdoor/Blind sentiment, representative quotes, interview process reports, red flags, talking points
+
+**Agent C — Hiring Manager Research**
+Prompt: `subagents/stage2-agent-c-hm.md`
+Inputs: company name, role, department, JD text
+Output: `{company-slug}_stage2_c_hm.json`
+Covers: hiring manager identification, full profile, personality read, application implications, team members
+
+**Agent D — JD Context Resolution**
+Prompt: `subagents/stage2-agent-d-jd-resolution.md`
+Inputs: company name, role, `stage1_jd_flags` from session state
+Output: `{company-slug}_stage2_d_jd_resolution.json`
+Covers: resolves each flagged JD phrase with company-specific context
+
+**Orchestrator — after all four agents complete:**
+1. Read all four partial JSON files
+2. Merge into `{company-slug}_company-analysis.json` per `references/company-analysis.schema.json`
+3. Write `stage2_hm_profile` to session state from Agent C output
+4. Run hiring problem synthesis across the merged picture (see below)
+5. Write `{company-slug}_company-brief.md` as the human-readable narrative
+6. Delete the four partial JSON files — the merged file is the artifact
+
+Merge conflict rule: where agents produce overlapping claims with different confidence levels, keep the higher-confidence claim and note the discrepancy in the Information Quality Report.
+
+---
+
+### Sequential Path (chat / no `Task` tool)
+
+Research the four areas in order using the subagent prompt files as extended guidance for each area:
+1. Company fundamentals (mission, market, product strategy, equity)
+2. Culture and interview intel (Glassdoor, Blind, interview reports)
+3. Hiring manager identification and profiling
+4. JD context-dependent phrase resolution
+
+Write directly to `{company-slug}_company-analysis.json` and `{company-slug}_company-brief.md` — no partial files needed.
+
+---
+
+### Research Standards (both paths)
+
+- Every claim carries a confidence label: **high**, **medium**, **low**, or **speculation**
+- Every quantitative claim carries a recency marker — funding, valuations, headcount, ARR. No number without a date (e.g., "as of Q3 2024")
+- When data is unavailable: "No public information found" — never fill gaps with inference
+- Cite sources; prefer official materials, SEC filings, major tech media, Glassdoor, LinkedIn
+
+---
+
+### Hiring Manager Profile — write to `stage2_hm_profile` in session state
+
+After Agent C completes (parallel) or after HM research (sequential). If the hiring manager couldn't be identified, populate from JD tone and seniority signals with `"confidence": "inferred"`.
 
 ```json
 {
   "name": "Name or 'Unknown'",
   "confidence": "confirmed | inferred | unknown",
-  "background": "One sentence: career path and functional origin (e.g., 'Engineering-to-PM, spent 8 years at enterprise SaaS companies')",
-  "values_signals": ["List of 3–5 things they demonstrably care about, drawn from public writing, talks, LinkedIn, or JD emphasis — concrete, not generic"],
-  "communication_style": "How they write and speak publicly — formal/casual, data-driven/narrative, direct/diplomatic",
-  "likely_confident_if": ["2–3 specific things a candidate would say or show that would make this person lean in"],
-  "likely_skeptical_if": ["2–3 specific things that would raise flags for this person — based on their background and stated values, not generic interview fears"],
-  "jd_tone_signals": "What the JD's word choices, emphasis, and structure reveal about what this HM prioritizes — independent of what it literally says"
+  "background": "One sentence: career path and functional origin",
+  "values_signals": ["3–5 concrete things they demonstrably care about"],
+  "communication_style": "formal/casual, data-driven/narrative, direct/diplomatic",
+  "likely_confident_if": ["2–3 specific things that make this person lean in"],
+  "likely_skeptical_if": ["2–3 specific things that raise flags for this person"],
+  "jd_tone_signals": "What the JD's word choices reveal about HM priorities"
 }
 ```
 
-This profile is a primary input for the Hiring Manager Filter applied in Stages 5, 6, 7, 8, and 10. Confidence-label everything. If a field is truly unknowable, write `null` and note why.
+---
 
-**Hiring Problem Synthesis — append to the company brief as an eighth section:**
+### Hiring Problem Synthesis — runs after all research is complete
 
-After completing the company research, return to the context-dependent JD phrases flagged in Stage 1 and resolve them with what you now know. Then synthesize a hiring problem statement: *what specific business problem is this hire meant to solve?*
+Return to `stage1_jd_flags` from session state. Resolve each flagged phrase with what research now reveals. Then synthesize a hiring problem statement in 3–5 sentences covering:
 
-Write 3–5 sentences covering:
-- The **primary problem** — the core thing that breaks or stalls without this hire
-- **Secondary goals** — what the hiring manager also wants but would trade away if forced to
-- **Implied urgency** — signals about timeline or pressure (competitive threat, growth stage, recent org change, etc.)
-- **What a bad hire looks like** — what failure mode the hiring manager is most afraid of, inferred from company context and JD emphasis
+- **Primary problem** — the core thing that breaks or stalls without this hire
+- **Secondary goals** — what the HM wants but would trade away under pressure
+- **Implied urgency** — competitive threat, growth stage, org change, board pressure
+- **Bad hire failure mode** — what the HM is most afraid of, inferred from context
 
-This should read as a pointed analytical conclusion, not a restatement of the JD. If company research revealed something that recontextualizes a flagged JD phrase, name it explicitly: *"'Own the roadmap end-to-end' likely signals that the previous PM was execution-only and the team lost strategic direction — not that they want someone to start a roadmap from scratch."*
+Name resolved JD phrases explicitly: *"‘Own the roadmap end-to-end’ likely signals the previous PM was execution-only, not that they want someone starting from scratch."*
 
-Write the hiring problem statement to `stage2_hiring_problem` in `{company-slug}_session-state.json`. This is a primary input for Stages 5, 6, 7, 8, and 10 — every downstream stage should answer the question this section poses.
+Write to `stage2_hiring_problem` in session state. This is the editorial through-line for Stages 5–10.
 
-**⛔ STOP — Gate 2:** After presenting the narrative brief and hiring problem synthesis, add a visible separator. Use this exact format:
+---
+
+**⛔ STOP — Gate 2:** After presenting the brief and hiring problem synthesis:
 
 ```
 ---
 ⛔ Pausing here before Stage 3. Does this read of the hiring problem feel right? Any corrections, insider knowledge, or recruiter intel that would change the picture?
 ```
 
-Wait for the user's response. If they have corrections — a recruiter call, inside knowledge, a referral who described the real situation — incorporate them and update `stage2_hiring_problem` in session state before proceeding to Stage 3.
-
----
+Incorporate any corrections, update `stage2_hiring_problem` in session state, then proceed to Stage 3.
 
 ## Stage 3: Resume Gap Analysis + ATS Keyword Matching
 
@@ -380,4 +437,17 @@ Ask: *"Does this structure feel right?"* Get a green light.
 - `references/stage8-resume-customization.md` — Full resume optimization prompt
 - `references/stage10-cover-letter.md` — Cover letter prompt, rules, and structure
 - `references/company-analysis.schema.json` — JSON schema for Stage 2 company research output
-- `references/session-state.schema.json` — JSON schema for accumulating approved decisions across Stages 4–10
+- `references/session-state.schema.json` — JSON schema for accumulating approved decisions across Stages 2–10
+
+## Subagents (Claude Code CLI only)
+
+Used by Stage 2 when the `Task` tool is available. Each is a standalone research prompt spawned in parallel:
+
+- `subagents/stage2-agent-a-fundamentals.md` — Company mission, market position, product strategy, equity
+- `subagents/stage2-agent-b-culture.md` — Glassdoor/Blind sentiment, interview process intel
+- `subagents/stage2-agent-c-hm.md` — Hiring manager identification and profile
+- `subagents/stage2-agent-d-jd-resolution.md` — Resolves context-dependent JD phrases with company-specific evidence
+
+## Claude Code Setup
+
+See `CLAUDE.md` for CLI configuration, recommended model flags, permission settings, and session structure.
