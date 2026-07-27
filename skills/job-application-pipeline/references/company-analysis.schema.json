@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Company Analysis Schema v1.2.0",
-  "description": "Machine-readable structure for cross-stage handoff of company and hiring team intelligence. Stage 10 reads this directly — only use facts where confidence >= medium in the cover letter.",
+  "title": "Company Analysis Schema v1.3.0",
+  "description": "Machine-readable structure for cross-stage handoff of company and hiring team intelligence. Stage 10 reads this directly — only use facts where confidence >= medium in the cover letter. v1.3.0 renamed 'product_strategy' to 'strategy_direction' so the field fits any role (product, technical, commercial, design, or operations), not just product management.",
   "type": "object",
   "required": ["schema_version", "company", "role_context", "metadata"],
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.2.0"
+      "const": "1.3.0"
     },
     "company": {
       "type": "object",
@@ -120,8 +120,9 @@
         }
       }
     },
-    "product_strategy": {
+    "strategy_direction": {
       "type": "object",
+      "description": "The company's strategic direction and where it's headed. For a product or technical role this is product/technology strategy; for a commercial role it's market and go-to-market strategy; for an operations or G&A role it's the operating model and org strategy. Capture whichever framing the role makes relevant.",
       "properties": {
         "confirmed": {
           "type": "array",

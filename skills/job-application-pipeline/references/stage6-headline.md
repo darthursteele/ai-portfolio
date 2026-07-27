@@ -56,7 +56,7 @@ For each headline:
 
 *Chiasmus or reversal* — Flipping a familiar structure forces a re-read. Use when the candidate's value is counterintuitive.
 
-*Zeugma* — One verb governs two different things. "Designing products and the teams that build them." Efficient, implies breadth without listing.
+*Zeugma* — One verb governs two different things. "Building systems and the teams that run them." Efficient, implies breadth without listing.
 
 *Rule of three* — Three parallel phrases that build. Powerful when the candidate has a clear triptych of value.
 
@@ -69,9 +69,9 @@ For each headline:
 - Maximum ~15 words; shorter is usually better
 - **Banned patterns:**
   - "From [X] to [Y]" constructions — overused, signal nothing distinctive
-  - Keyword strings: "AI | Product | Strategy | Data | Enterprise" — this is a tag cloud, not a headline
+  - Keyword strings: "AI | Strategy | Data | Growth | Enterprise" — this is a tag cloud, not a headline
   - Superlatives: "world-class," "visionary," "results-driven," "passionate," "dynamic," "innovative"
-  - Generic title + modifier: "Senior Strategic Product Leader"
+  - Generic title + modifier: "Senior Strategic Operations Leader"
 - The headline should work for this role specifically, not as a generic personal brand
 - It should sound like something a smart person wrote, not a template filled in
 - No fabrication: no skills, credentials, or scope not supported by the resume

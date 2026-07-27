@@ -41,7 +41,7 @@ ATS filters rank resumes by keyword density before a human reads them. This anal
 Pull:
 - Role-specific titles and seniority language (e.g., "Principal," "Staff," "Solutions Architect")
 - Technical skills, tools, platforms, and frameworks named explicitly
-- Methodologies and processes called out (e.g., "agile," "discovery," "go-to-market")
+- Methodologies and processes called out (e.g., "agile," "discovery," "go-to-market," "demand generation," "zero-based budgeting")
 - Domain terms that signal industry fluency
 - Soft-skill phrases that appear more than once (repetition signals weighting)
 

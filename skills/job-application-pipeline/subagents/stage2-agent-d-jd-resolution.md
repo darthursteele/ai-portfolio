@@ -45,10 +45,10 @@ Structure:
 For each flagged phrase:
 
 1. **Search for company-specific context** that makes the phrase's meaning concrete. Examples:
-   - "Build from scratch" — did they just shut down a prior product? Did they recently lose their PM? Are they entering a new market?
+   - "Build from scratch" — did they just shut down a prior effort? Did they recently lose the person who owned this? Are they entering a new market?
    - "Drive AI adoption" — did they announce an AI initiative? Did a competitor just launch an AI product? Are they behind internally?
-   - "Own the roadmap end-to-end" — was there a recent reorganization? Did the previous person in this role leave? Are they scaling from a founder-led model?
-   - "Partner with the business" — is there a known tension between product and business units? Did they recently restructure?
+   - "Own it end-to-end" — was there a recent reorganization? Did the previous person in this role leave? Are they scaling from a founder-led model?
+   - "Partner with the business" — is there a known tension between this function and the commercial side of the business? Did they recently restructure?
 
 2. **Search sources:** recent company news, press releases, job postings (what else are they hiring?), executive interviews, LinkedIn posts from company employees, industry news about their competitive position.
 
