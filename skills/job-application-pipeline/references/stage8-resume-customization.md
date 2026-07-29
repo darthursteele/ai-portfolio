@@ -36,7 +36,7 @@ Produce the resume in this order:
 
 ## Skills Section
 
-**Category headers** should reflect the JD's own organizational logic — not generic headers like "Technical Skills" or "Soft Skills." If the JD organizes around domains (e.g., "AI/ML," "Product," "Go-to-Market"), mirror that structure.
+**Category headers** should reflect the JD's own organizational logic — not generic headers like "Technical Skills" or "Soft Skills." If the JD organizes around domains (e.g., "AI/ML," "Go-to-Market," "Design Systems," "Revenue Operations"), mirror that structure.
 
 **Ordering within categories:** highest-relevance to this role first. Not chronological, not alphabetical.
 
@@ -52,7 +52,7 @@ Produce the resume in this order:
 
 **Context sentence** (one sentence, italicized or in a subdued style): Sets the stage before bullets. Answers: what did this company do, what was the scale, and what was the candidate's mandate. This is especially important for companies the hiring manager may not recognize.
 
-> Example: *Led product for a 40-person fintech startup building embedded lending infrastructure for regional banks; owned the full roadmap from discovery through launch.*
+> Example: *Ran growth marketing for a 40-person fintech startup building embedded-lending infrastructure for regional banks; owned demand generation from top-of-funnel through pipeline handoff.*
 
 **Bullets:** Rewrite for relevance, not just polish.
 
@@ -84,7 +84,7 @@ Before finalizing, read the resume as `stage2_hm_profile` would:
 
 ## Anti-Patterns — these degrade the resume
 
-**Responsibility-framed bullets** describe what the candidate was supposed to do, not what they did. *"Responsible for product roadmap"* tells the reader nothing. *"Rebuilt the roadmap process after two consecutive missed launches, shipping the next four on schedule"* tells them something.
+**Responsibility-framed bullets** describe what the candidate was supposed to do, not what they did. *"Responsible for the sales pipeline"* tells the reader nothing. *"Rebuilt the pipeline-management process after two consecutive missed quarters, hitting target the next four"* tells them something.
 
 **Vague scale:** *"Worked with a large team"* — how large? *"Improved performance"* — by how much? Either quantify or cut.
 

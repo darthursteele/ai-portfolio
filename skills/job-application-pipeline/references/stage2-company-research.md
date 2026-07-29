@@ -12,7 +12,7 @@ Two outputs:
 1. Inside Scoop on {department}
 2. Why the Company Exists
 3. Market Position & Competition
-4. Product Strategy
+4. Strategy & Direction
 5. Equity & Financial Outlook
 6. Interview Intelligence
 7. Hiring Team Profiles
@@ -23,7 +23,7 @@ End the brief with a short **Information Quality Report** showing:
 - Data recency summary (oldest source date, most recent source date)
 - Key gaps (what you couldn't find and why it matters)
 
-**JSON file** — structured object conforming to `references/company-analysis.schema.json` (v1.2.0). Include only keys defined in the schema. Produce valid JSON with no free text outside the object. Include `generated_at`, `generator: "company-analysis-prompt"`, and `content_hash` in metadata.
+**JSON file** — structured object conforming to `references/company-analysis.schema.json` (v1.3.0). Include only keys defined in the schema. Produce valid JSON with no free text outside the object. Include `generated_at`, `generator: "company-analysis-prompt"`, and `content_hash` in metadata.
 
 ---
 
@@ -55,7 +55,9 @@ End the brief with a short **Information Quality Report** showing:
 - Include analyst or media commentary where available.
 - Note any competitive dynamics relevant to the role (e.g., losing ground to an AI-native competitor matters differently for an AI PM role than for a finance role).
 
-## Section 4: Product Strategy Forensics
+## Section 4: Strategy & Direction Forensics
+
+Reconstruct where the company is placing its bets and where it's headed. Frame the analysis around whatever this {role} makes most relevant: product and technology strategy for a product or technical role, market and go-to-market strategy for a commercial role (sales, marketing, partnerships), or operating model and org strategy for an operations or G&A role. When in doubt, capture the company-level strategy and call out the angle most relevant to this role.
 
 - **Confirmed strategy:** From press releases, executive statements, blog posts, earnings calls. Cite sources.
 - **Inferred direction:** From hiring patterns, patents, acquisitions, conference themes. Label clearly as inferred.
@@ -104,7 +106,7 @@ Then synthesize a hiring problem statement in 3–5 sentences covering:
 - **Implied urgency** — signals about timeline or pressure (competitive threat, growth stage, recent org change, board pressure, etc.)
 - **What a bad hire looks like** — the failure mode the hiring manager is most afraid of, inferred from company context and JD emphasis
 
-This should read as pointed analytical conclusion, not a restatement of the JD. If research recontextualizes a flagged phrase, name it explicitly — e.g., *"'Own the roadmap end-to-end' likely signals that the previous PM was execution-only and the team lost strategic direction, not that they want someone to start a roadmap from scratch."*
+This should read as pointed analytical conclusion, not a restatement of the JD. If research recontextualizes a flagged phrase, name it explicitly — e.g., *"'Own it end-to-end' likely signals that the previous person in the seat was execution-only and the team lost strategic direction, not that they want someone starting from scratch."*
 
 Write the hiring problem statement to `stage2_hiring_problem` in `{company-slug}_session-state.json`. This is a primary input for Stages 5, 6, 7, 8, and 10.
 

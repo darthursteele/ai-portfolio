@@ -8,6 +8,8 @@ description: >
 
 A sequential, collaborative pipeline for job applications. Every stage either produces intelligence that feeds the next, or requires explicit user input before proceeding. **No stage is skipped. No gate is bypassed.** The quality of the final application package depends on the conversation that builds it.
 
+**Scope:** This pipeline works for any role at a technology company or startup — product, engineering, data, design, go-to-market (sales, marketing, partnerships), or operations and G&A. It deliberately assumes that tech-company/startup context: equity and funding matter, orgs move fast, and public signals live on Glassdoor, Blind, LinkedIn, Crunchbase, and the like. Where a stage gives examples in one function's language, read them as illustrations — apply the same mechanism to the role at hand. It is not tuned for non-tech industries (government, academia, traditional enterprise outside tech).
+
 ---
 
 ## MANDATORY GATE RULE
@@ -71,7 +73,7 @@ Read `references/stage1-jd-review.md` for the full prompt.
 - Fetch the JD URL. If the page fails to render or returns only partial content, stop immediately and tell the user: *"The page didn't render the full JD — can you paste it in directly?"* Do not proceed with incomplete content.
 - Parse the JD into structured sections: role overview, key responsibilities, required qualifications, nice-to-haves, and any signals about team/culture/stage.
 - Identify anything ambiguous or missing that would affect how you approach the application.
-- **Flag context-dependent language:** Note any JD phrases whose meaning depends on knowing the company's actual situation — things that could signal very different hiring problems depending on context. Examples: "drive AI adoption," "build from scratch," "partner with the business," "own the roadmap." List these explicitly as *phrases to reinterpret after company research.* Do not guess at their meaning yet — that happens at the end of Stage 2.
+- **Flag context-dependent language:** Note any JD phrases whose meaning depends on knowing the company's actual situation — things that could signal very different hiring problems depending on context. Examples: "drive AI adoption," "build from scratch," "partner with the business," "own it end-to-end." (These span any function — the flagged phrase might be "own the roadmap," "own the number," "own the funnel," or "own the process" depending on the role.) List these explicitly as *phrases to reinterpret after company research.* Do not guess at their meaning yet — that happens at the end of Stage 2.
 
 **Output:** Present a clean JD summary to the user — not a copy-paste, a structured interpretation. Flag any gaps (e.g., compensation not listed, seniority level unclear). End with the flagged context-dependent phrases as a brief list. No gate — proceed to Stage 2 immediately.
 
@@ -98,7 +100,7 @@ Spawn four subagents simultaneously using the `Task` tool. Each receives its foc
 Prompt: `subagents/stage2-agent-a-fundamentals.md`
 Inputs: company name, role, JD text
 Output: `{company-slug}_stage2_a_fundamentals.json`
-Covers: mission, market position, competitors, product strategy (confirmed + inferred), equity/funding
+Covers: mission, market position, competitors, strategy & direction (confirmed + inferred), equity/funding
 
 **Agent B — Culture & Interview Intel**
 Prompt: `subagents/stage2-agent-b-culture.md`
@@ -133,7 +135,7 @@ Merge conflict rule: where agents produce overlapping claims with different conf
 ### Sequential Path (chat / no `Task` tool)
 
 Research the four areas in order using the subagent prompt files as extended guidance for each area:
-1. Company fundamentals (mission, market, product strategy, equity)
+1. Company fundamentals (mission, market, strategy & direction, equity)
 2. Culture and interview intel (Glassdoor, Blind, interview reports)
 3. Hiring manager identification and profiling
 4. JD context-dependent phrase resolution
@@ -179,7 +181,7 @@ Return to `stage1_jd_flags` from session state. Resolve each flagged phrase with
 - **Implied urgency** — competitive threat, growth stage, org change, board pressure
 - **Bad hire failure mode** — what the HM is most afraid of, inferred from context
 
-Name resolved JD phrases explicitly: *"‘Own the roadmap end-to-end’ likely signals the previous PM was execution-only, not that they want someone starting from scratch."*
+Name resolved JD phrases explicitly: *"‘Own it end-to-end’ likely signals the previous person in the seat was execution-only, not that they want someone starting from scratch."*
 
 Write to `stage2_hiring_problem` in session state. This is the editorial through-line for Stages 5–10.
 
@@ -215,8 +217,8 @@ ATS (Applicant Tracking System) filters rank resumes by keyword density before a
 **Step 1 — Extract JD keyword inventory.** Pull:
 - Role-specific titles and seniority language (e.g., "Principal," "Staff," "Solutions Architect")
 - Technical skills, tools, platforms, and frameworks named explicitly
-- Methodologies and processes called out (e.g., "agile," "discovery," "go-to-market")
-- Domain terms that signal industry fluency (e.g., "omnichannel," "agentic workflows")
+- Methodologies and processes called out (e.g., "agile," "discovery," "go-to-market," "demand generation," "zero-based budgeting")
+- Domain terms that signal industry fluency (e.g., "omnichannel," "agentic workflows," "RevOps," "FedRAMP")
 - Soft-skill phrases that appear more than once (repetition signals they're weighted)
 
 **Step 2 — Map each keyword against the current resume.** For each keyword:
@@ -289,15 +291,15 @@ Read `references/stage6-headline.md` for the full prompt if it exists. The rules
 
 **What a resume headline must do:**
 1. Communicate the candidate's primary value — what they're best at — anchored to what the role most needs.
-2. Differentiate: it should be harder to apply verbatim to a generic candidate than a generic title like "Product Manager."
+2. Differentiate: it should be harder to apply verbatim to a generic candidate than a bare job title like "Product Manager," "Account Executive," or "Operations Lead."
 3. Not fabricate. No skills, domains, or credentials the candidate doesn't have. No implied scale or scope that isn't supported by the resume.
 4. Not be boastful. The tone is confident, not self-congratulatory. There's a meaningful difference between "I'm exceptional at X" and a headline that demonstrates it by how it's constructed.
 
 **Patterns to avoid — these are banned:**
 - "From [X] to [Y]" constructions. They're overused and signal nothing distinctive.
-- Random keyword strings. "AI | Product | Strategy | Data | Enterprise" is not a headline — it's a tag cloud. Every word must pull its weight toward a coherent idea.
+- Random keyword strings. "AI | Strategy | Data | Growth | Enterprise" is not a headline — it's a tag cloud. Every word must pull its weight toward a coherent idea.
 - Superlatives: "world-class," "visionary," "results-driven," "passionate."
-- Generic professional titles with a modifier bolted on: "Senior Strategic Product Leader."
+- Generic professional titles with a modifier bolted on: "Senior Strategic Operations Leader."
 
 **How to construct candidates:**
 
@@ -309,7 +311,7 @@ The headline should answer the hiring problem — not abstractly, but by implyin
 
 **Literary device toolkit for headlines** (pick a dominant device per headline, not a pile of them):
 
-*Sound and rhythm* — Alliteration, assonance, and meter make a phrase memorable without the reader knowing why. "Physics to Product" works partly because of the hard stop of the P sounds. Use sparingly — it should feel crafted, not forced.
+*Sound and rhythm* — Alliteration, assonance, and meter make a phrase memorable without the reader knowing why. "Proof over promises" works partly because of the hard stop of the P sounds. Use sparingly — it should feel crafted, not forced.
 
 *Compression* — Parataxis and asyndeton strip conjunctions for speed. "Build. Ship. Learn." is three ideas in six words. Useful when the candidate's value is a sequence or process.
 
@@ -321,7 +323,7 @@ The headline should answer the hiring problem — not abstractly, but by implyin
 
 *Chiasmus or reversal* — Flipping a familiar structure: "Shape tools, tools shape us" forces a re-read. Use this when the candidate's value is counterintuitive.
 
-*Zeugma* — One verb or noun that governs two different things: "Designing products and the teams that build them." Efficient, implies breadth without listing.
+*Zeugma* — One verb or noun that governs two different things: "Building systems and the teams that run them." Efficient, implies breadth without listing.
 
 *Negative space* — What's intentionally not said. A tight, specific headline implies everything it excludes. "AI infrastructure for regulated industries" says nothing about soft skills — and doesn't need to.
 
@@ -443,7 +445,7 @@ Ask: *"Does this structure feel right?"* Get a green light.
 
 Used by Stage 2 when the `Task` tool is available. Each is a standalone research prompt spawned in parallel:
 
-- `subagents/stage2-agent-a-fundamentals.md` — Company mission, market position, product strategy, equity
+- `subagents/stage2-agent-a-fundamentals.md` — Company mission, market position, strategy & direction, equity
 - `subagents/stage2-agent-b-culture.md` — Glassdoor/Blind sentiment, interview process intel
 - `subagents/stage2-agent-c-hm.md` — Hiring manager identification and profile
 - `subagents/stage2-agent-d-jd-resolution.md` — Resolves context-dependent JD phrases with company-specific evidence

@@ -9,7 +9,7 @@ Write a single JSON file: `{company-slug}_stage2_a_fundamentals.json`
 The file must be valid JSON conforming to the following top-level keys from `company-analysis.schema.json`:
 - `mission_and_problem`
 - `market_position`
-- `product_strategy`
+- `strategy_direction`
 - `equity`
 
 Include `confidence` and `source_url` on every claim. Tag all quantitative figures with recency (e.g., `"as of Q3 2024"`). If data is unavailable, write `"No public information found"` — do not infer or generalize.
@@ -27,7 +27,8 @@ Include `confidence` and `source_url` on every claim. Tag all quantitative figur
 - Their differentiation claim and whether it holds up under scrutiny
 - Any analyst or media commentary on their competitive position
 
-### Product Strategy
+### Strategy & Direction
+Research the company's strategic direction — where it's placing its bets and where it's headed. Frame it around whatever the **{role}** makes most relevant: product/technology strategy for a product or technical role, market and go-to-market strategy for a commercial role, operating model and org strategy for an operations or G&A role. When in doubt, capture the company-level strategy and note the angle most relevant to this role.
 - **Confirmed strategy:** from press releases, executive statements, earnings calls, blog posts. Cite each source.
 - **Inferred direction:** from recent hiring patterns, job postings, acquisitions, patents, conference themes. Label clearly as inferred.
 - Any recent pivots or strategic shifts in the last 12–18 months

@@ -46,7 +46,7 @@ Present a structured interpretation — not a copy-paste — organized as follow
 
 **Context-Dependent Phrases** ← hold for Stage 2
 - List any JD phrases whose meaning depends on knowing the company's actual situation. Do not interpret them yet — that happens at the end of Stage 2 after company research.
-- Examples of phrases that commonly need reinterpretation: "drive AI adoption," "build from scratch," "partner with the business," "own the roadmap end-to-end," "define the strategy," "scale the team."
+- Examples of phrases that commonly need reinterpretation: "drive AI adoption," "build from scratch," "partner with the business," "own it end-to-end" (which shows up role-specifically as "own the roadmap," "own the number," "own the funnel," or "own the process"), "define the strategy," "scale the team."
 - For each, note briefly *why* it's ambiguous (e.g., "'build from scratch' could mean greenfield or could mean cleaning up a failed prior effort").
 
 ---

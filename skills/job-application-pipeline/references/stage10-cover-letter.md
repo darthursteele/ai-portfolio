@@ -80,16 +80,16 @@ Open with something that signals you understand the company's actual situation. 
 **Opening patterns that work:**
 
 *Lead with the hiring problem:*
-> "Most companies trying to build AI into their product org discover too late that the bottleneck isn't the models — it's the lack of someone who can hold the technical context and the customer context at the same time."
+> "Most companies racing to put AI into the business discover too late that the bottleneck isn't the models — it's not having someone who can hold the technical context and the customer context at the same time."
 
 *Lead with a counterintuitive observation:*
-> "The hardest part of scaling an AI product isn't the infrastructure — it's convincing the rest of the business to change how they work around it."
+> "The hardest part of scaling an AI initiative isn't the infrastructure — it's convincing the rest of the business to change how they work around it."
 
 *Lead with a specific relevant result:*
 > "In three years at [company], I reduced time-to-insight for enterprise customers from six weeks to four days by rebuilding how we scoped and handed off data products."
 
 *Lead with a pointed observation about the company's situation:*
-> "[Company]'s move into [market] is the right bet — and it's the kind of bet that only pays off if the product org can keep pace with the go-to-market motion."
+> "[Company]'s move into [market] is the right bet — and it's the kind of bet that only pays off if execution keeps pace with the go-to-market motion."
 
 The opening should be one sentence. Two at most.
 
