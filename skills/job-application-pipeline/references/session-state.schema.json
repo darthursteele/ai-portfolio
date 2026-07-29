@@ -1,16 +1,31 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Application Pipeline Session State v1.1.0",
-  "description": "Accumulates user-approved decisions and research outputs across pipeline stages. Initialized at Stage 2, written incrementally after each stage. Downstream stages read from this file rather than scraping conversation history.",
+  "title": "Application Pipeline Session State v1.2.0",
+  "description": "Accumulates user-approved decisions and research outputs across pipeline stages. Initialized at Stage 2, written incrementally after each stage. Downstream stages read from this file rather than scraping conversation history. v1.2.0 adds the `preferences` object for user-set voice (grammatical person) choices captured at intake.",
   "type": "object",
   "required": ["schema_version", "company", "role", "created_at"],
   "properties": {
-    "schema_version": { "type": "string", "const": "1.1.0" },
+    "schema_version": { "type": "string", "const": "1.2.0" },
     "company": { "type": "string" },
     "role": { "type": "string" },
     "created_at": { "type": "string", "format": "date-time" },
     "last_updated_at": { "type": "string", "format": "date-time" },
     "last_completed_stage": { "type": "integer", "minimum": 1, "maximum": 10 },
+
+    "preferences": {
+      "description": "User-set output preferences, captured at intake before Stage 2 and written when session state is initialized. Controls grammatical voice (person) for generated resume prose. The cover letter is always first person and is unaffected by these settings.",
+      "type": "object",
+      "properties": {
+        "summary_voice": {
+          "$ref": "#/$defs/voice_register",
+          "description": "Voice for the Stage 7 professional summary. Default: first_person."
+        },
+        "bullets_voice": {
+          "$ref": "#/$defs/voice_register",
+          "description": "Voice for Stage 8 experience bullets and role context sentences. Default: implied."
+        }
+      }
+    },
 
     "stage1_jd_flags": {
       "description": "Written at end of Stage 1. Context-dependent JD phrases held for reinterpretation after company research.",
@@ -205,6 +220,11 @@
       "type": "string",
       "enum": ["high", "medium", "low", "speculation"],
       "description": "high = multiple corroborating sources; medium = single credible source or strong inference; low = single weak signal; speculation = educated guess with no direct evidence"
+    },
+    "voice_register": {
+      "type": "string",
+      "enum": ["first_person", "implied", "third_person"],
+      "description": "Grammatical voice for generated prose. first_person = 'I' pronouns (e.g., 'I shipped X'); implied = no pronoun, verb- or noun-phrase lead, the standard resume register (e.g., 'Shipped X'); third_person = candidate name or pronoun as subject (e.g., 'David shipped X')."
     }
   }
 }
