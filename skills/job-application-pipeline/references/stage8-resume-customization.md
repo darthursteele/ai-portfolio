@@ -15,8 +15,9 @@ Pull all of the following from `{company-slug}_session-state.json`:
 - `stage5_strategy.approved_positioning` — the narrative angle everything should serve
 - `stage6_headline.approved_headline` — the promise the resume body must substantiate
 - `stage7_summary.approved_summary` — already written; do not rewrite it here
+- `preferences.bullets_voice` — grammatical voice for bullets and context sentences (default `implied` if unset)
 
-If any of these fields are missing or null, flag it before proceeding. Do not fabricate inputs.
+If any of these fields are missing or null, flag it before proceeding. Do not fabricate inputs. (`preferences.bullets_voice` is the one exception — if it's absent, fall back to the `implied` default rather than flagging.)
 
 ---
 
@@ -46,6 +47,18 @@ Produce the resume in this order:
 
 ---
 
+## Voice
+
+Render every context sentence and bullet in the register set in `preferences.bullets_voice` (default `implied`). Keep it consistent across all roles — do not mix registers.
+
+- **`implied`** (default, standard resume register) — verb-led, no pronoun. Context: *"Led product for a 40-person fintech startup…"* Bullet: *"Shipped X in six weeks by [method], resulting in Z."*
+- **`first_person`** — lead with "I". Context: *"I led product for a 40-person fintech startup…"* Bullet: *"I shipped X in six weeks by [method], resulting in Z."*
+- **`third_person`** — the candidate's name/pronoun as subject where it reads naturally; name on first mention, pronouns after. Context: *"Maya led product for a 40-person fintech startup…"* Bullet: *"Shipped X in six weeks by [method], resulting in Z"* or, where a subject is natural, *"She shipped X in six weeks…"* Stay verb-forward; never use "I".
+
+The quantification, selection, and no-fabrication rules below are voice-independent — apply them the same way regardless of register.
+
+---
+
 ## Experience Section
 
 ### For each role:
@@ -59,7 +72,7 @@ Produce the resume in this order:
 - **Selection:** Choose bullets that connect to the hiring problem or the approved positioning. An impressive bullet that has nothing to do with either should be cut or condensed — resume length discipline signals judgment.
 - **Quantification target:** ≥80% of bullets should include a number, percentage, timeframe, or scale indicator. If the original bullet has no number and the user didn't provide one in Stage 4, either prompt for it (if the gate hasn't passed) or write the bullet in a way that implies scale without fabricating.
 - **Verb choice:** Start with a strong past-tense verb. Avoid: *managed, helped, worked on, supported, assisted, collaborated.* Prefer: verbs that imply agency and outcome — *built, launched, reduced, increased, redesigned, negotiated, recovered, shipped.*
-- **Structure:** Lead with the action and outcome, not the context. Wrong: *"Working cross-functionally with engineering and design teams, I led the development of..."* Right: *"Shipped X in Y weeks by [method], resulting in Z."*
+- **Structure:** Lead with the action and outcome, not the context. Wrong: *"Working cross-functionally with engineering and design teams, I led the development of..."* Right: *"Shipped X in Y weeks by [method], resulting in Z."* (The "Right" example is in the default `implied` voice; for `first_person` prepend "I", for `third_person` use the name/pronoun as subject — the lead-with-action principle holds in every register.)
 - **No fabrication:** Every claim must trace to the original resume or a Stage 4 answer. If a Stage 4 answer is vague ("it did pretty well"), don't invent a number — write the bullet without one or flag it for the user.
 
 ### Chronological completeness

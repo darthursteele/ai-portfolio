@@ -41,8 +41,27 @@ Before starting Stage 1, confirm you have:
 
 1. **Job description** — URL or pasted text. If a URL is given, fetch it. If the page is JavaScript-gated and doesn't render, say so explicitly and ask the user to paste the text directly. Do not proceed with partial JD content.
 2. **Resume** — attached file or project file path.
+3. **Voice preference** — how the professional summary and experience bullets should be written (see **Voice Preference** below). This is optional; if the user doesn't specify, use the defaults. Don't block the pipeline waiting for it.
 
-Keep this to one message: *"To get started I need the job description (URL or paste it in) and your resume if you haven't already attached it."*
+Keep this to one message: *"To get started I need the job description (URL or paste it in) and your resume if you haven't already attached it. By default I'll write your professional summary in the first person and your experience bullets in the standard no-pronoun resume style — say the word if you'd prefer a different voice for either (first person, no-pronoun, or third person)."*
+
+---
+
+## Voice Preference
+
+The user can choose the grammatical **voice** (person) for two parts of the resume independently: the **professional summary** (Stage 7) and the **experience bullets** (Stage 8). Capture the choice once at intake, store it in session state, and apply it in those stages. **The cover letter is always first person** — it's a letter from the candidate — and is never governed by this setting.
+
+**Three registers** (`references/session-state.schema.json` → `voice_register`):
+
+- **`first_person`** — explicit "I"/"my". Summary: *"I'm a product leader who ships 0-to-1."* Bullet: *"I shipped X in six weeks by …"*
+- **`implied`** — no pronoun; noun-phrase lead for the summary, verb-led for bullets. This is the standard resume register. Summary: *"Product leader who ships 0-to-1."* Bullet: *"Shipped X in six weeks by …"*
+- **`third_person`** — the candidate's name or a pronoun as subject. Summary: *"Maya is a product leader who ships 0-to-1."* Bullet: *"Led a team of six to ship X in six weeks."* Use the name on first mention, then pronouns; keep bullets verb-forward and don't repeat the name on every line.
+
+**Defaults** (use when the user doesn't state a preference): `summary_voice: first_person`, `bullets_voice: implied` — this preserves the pipeline's prior behavior.
+
+**Capture and persist:** During intake, note the user's choice (or the defaults). When session state is initialized at the start of Stage 2, write `preferences.summary_voice` and `preferences.bullets_voice`. If the user changes their mind later, update these fields and regenerate the affected sections.
+
+**One honest note to offer if the user picks a non-default for bullets:** first-person ("I") and third-person bullets are less conventional on resumes than the no-pronoun style, and some recruiters and ATS parsers expect the no-pronoun norm. Mention this once so the choice is informed, then respect whatever they choose.
 
 ---
 
@@ -61,7 +80,7 @@ At the start of every run, create:
 
 Tell the user the folder name upfront.
 
-**Session state file:** Initialize `{company-slug}_session-state.json` at the start of Stage 2 (the hiring problem synthesis writes there after company research). Conform to `references/session-state.schema.json`. Write to it after each stage that produces output — do not batch writes to the end. Stages 5, 6, 7, 8, and 10 all read `stage2_hiring_problem` as a primary input — it is the through-line the whole application answers.
+**Session state file:** Initialize `{company-slug}_session-state.json` at the start of Stage 2 (the hiring problem synthesis writes there after company research). Conform to `references/session-state.schema.json`. On initialization, write the `preferences` object (voice choices captured at intake — see **Voice Preference**). Write to it after each stage that produces output — do not batch writes to the end. Stages 5, 6, 7, 8, and 10 all read `stage2_hiring_problem` as a primary input — it is the through-line the whole application answers.
 
 ---
 
@@ -347,7 +366,7 @@ The headline should answer the hiring problem — not abstractly, but by implyin
 
 - Write a professional summary using the three-part structure: credibility statement → approach/method → impact statement.
 - Ground it in the approved positioning strategy, headline direction, the hiring problem from `stage2_hiring_problem`, and the HM profile from `stage2_hm_profile`. The summary's impact statement should land on what the hiring manager needs solved — make it feel like the candidate was written for this problem.
-- Write in first person. Match JD language without sounding optimized.
+- **Voice:** Write in the register set in `preferences.summary_voice` (default `first_person` if unset — see **Voice Preference**). `first_person` uses "I"/"my"; `implied` drops the pronoun and leads with a noun phrase; `third_person` uses the candidate's name on first mention, then pronouns. Keep the voice consistent across the whole summary. Match JD language without sounding optimized.
 - Present the draft and ask for feedback. Revise until approved. Write the approved summary to `stage7_summary` in `{company-slug}_session-state.json`.
 
 ---
@@ -364,6 +383,7 @@ Read `references/stage8-resume-customization.md` for the full prompt.
 - **Hiring Manager Filter — Stage 8:** Pull `stage2_hm_profile`. Before finalizing the resume, read it as this HM would: Given their background and values signals, which bullets will land as compelling evidence and which will read as noise or raise doubts? Specifically: (1) reframe any bullet whose framing conflicts with what this HM demonstrably values — the same accomplishment can be framed around speed, rigor, collaboration, or impact depending on what resonates; (2) check that the skills section ordering and category labels reflect this HM's priorities, not a generic ordering; (3) if `likely_skeptical_if` flags anything the resume currently triggers, address it — either by removing the signal or explicitly countering it elsewhere.
 - **ATS integration:** Pull `stage3_ats_keywords.high_priority_additions` from `{company-slug}_session-state.json`. For each term, weave it into bullets or the skills section where it's truthful — use the JD's exact phrasing, not paraphrases. Do not manufacture usage; if a term can't be placed honestly, leave it out. After completing the resume, do a pass confirming every high-priority term is present at least once (or explicitly noted as unplaceable).
 - Update the skills section: category headers matching job priorities, only skills the candidate actually has, ordered by relevance.
+- **Voice:** Write the experience bullets and role context sentences in the register set in `preferences.bullets_voice` (default `implied` if unset — see **Voice Preference**). `implied` is verb-led with no pronoun ("Shipped X…"); `first_person` leads with "I" ("I shipped X…"); `third_person` uses the candidate's name/pronoun as subject where it reads naturally ("Maya rebuilt…", then "She shipped…"), staying verb-forward and never using "I". Apply the chosen voice consistently across every role. See `references/stage8-resume-customization.md` for per-voice examples.
 - Update each experience role: add context sentence, rewrite bullets for relevance, ≥80% of bullets quantified. No fabrication. Surface the answers from Stage 4.
 - Save the complete resume as `{company-slug}_resume-optimized.md`.
 - Present it and ask: *"How does this look? Any bullets you want changed, anything that doesn't sound like you?"* Revise until approved.
