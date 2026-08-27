@@ -15,7 +15,8 @@ Infer the likely personality traits of each participant across the five dimensio
 * Extraversion
 * Agreeableness
 * Neuroticism
-  Justify each rating using concrete language and examples from the conversation.
+
+Justify each rating using concrete language and examples from the conversation.
 
 ### 2. Cognitive and Perceptual Biases
 
